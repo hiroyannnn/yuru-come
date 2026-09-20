@@ -52,7 +52,7 @@ pub(all) struct BundleSummary {
 } derive(Debug, Eq, ToJson)
 
 ///|
-struct BundleEntry {
+priv struct BundleEntry {
   at : Int64
   participant_id : String
 }

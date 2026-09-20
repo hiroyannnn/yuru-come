@@ -1,0 +1,12 @@
+import {
+  "hiroyannnn/yuru-come/lib",
+  "moonbitlang/async",
+  "moonbitlang/async/cond_var",
+  "moonbitlang/async/stdio",
+}
+
+import {
+  "moonbitlang/async",
+} for "test"
+
+supported_targets = "-all+native"
