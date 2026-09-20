@@ -47,11 +47,17 @@ pub using @lib {type Comment}
 
 pub using @lib {type Kind}
 
+pub using @lib {type Mood}
+
+pub using @lib {type MoodSnapshot}
+
 pub using @lib {type PickupConfig}
 
 pub using @lib {type PickupList}
 
 pub using @lib {type PickupView}
+
+pub using @lib {type ReactionCount}
 
 pub using @lib {type ReactionRules}
 

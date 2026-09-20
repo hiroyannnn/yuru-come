@@ -114,6 +114,29 @@ pub fn Kind::from_key(String) -> Self?
 pub fn Kind::key(Self) -> String
 pub impl ToJson for Kind
 
+pub struct Mood {
+  retention_ms : Int64
+  mut events : Array[MoodEvent]
+  mut next_id : Int
+}
+pub fn Mood::new(retention_ms? : Int64) -> Self
+pub fn Mood::prune(Self, Int64) -> Unit
+pub fn Mood::reclassify(Self, Int, Kind) -> Unit
+pub fn Mood::record(Self, Int64, String, Kind, reaction? : String, label? : String) -> Int
+pub fn Mood::size(Self) -> Int
+pub fn Mood::snapshot(Self, Int64, Int64, top? : Int) -> MoodSnapshot
+
+type MoodEvent
+
+pub(all) struct MoodSnapshot {
+  window_ms : Int64
+  total : Int
+  by_kind : Map[String, Int]
+  rate_per_sec : Double
+  participants : Int
+  top_reactions : Array[ReactionCount]
+} derive(ToJson, @debug.Debug)
+
 pub(all) struct PickupConfig {
   priority_threshold : Double
   fade_ms : Int64
@@ -145,6 +168,11 @@ pub(all) struct PickupView {
   count : Int
   faded : Bool
   pinned : Bool
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct ReactionCount {
+  label : String
+  count : Int
 } derive(Eq, ToJson, @debug.Debug)
 
 pub struct ReactionRules {
