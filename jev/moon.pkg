@@ -1,6 +1,7 @@
 import {
   "hiroyannnn/yuru-come/lib",
   "moonbitlang/core/env",
+  "moonbitlang/async",
   "moonbitlang/async/http",
 }
 

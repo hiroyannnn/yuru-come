@@ -17,6 +17,7 @@ pub suberror JevError {
   InvalidJson(String)
   BadResponse(@lib.ResponseError)
 } derive(@debug.Debug)
+pub impl Show for JevError
 
 // Types and methods
 pub struct JevClient {

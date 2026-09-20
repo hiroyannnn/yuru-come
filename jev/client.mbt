@@ -45,8 +45,28 @@ pub fn JevClient::from_env() -> JevClient {
 }
 
 ///|
+/// 再試行までの待ち（ミリ秒）。
+const RETRY_DELAY_MS : Int = 300
+
+///|
 /// 1 コメントを仕分ける。kind と priority の 2 質問を 1 リクエストで送る。
+/// 一時的な失敗（429 と 5xx。Vercel AI Gateway は数 % の割合で 504 を返す）は 1 回だけ再試行する。
 pub async fn JevClient::judge(
+  self : JevClient,
+  context : String,
+  comment : @lib.Comment,
+) -> @lib.Triage {
+  self.request(context, comment) catch {
+    HttpStatus(code, _) if is_transient_status(code) => {
+      @async.sleep(RETRY_DELAY_MS)
+      self.request(context, comment)
+    }
+    err => raise err
+  }
+}
+
+///|
+async fn JevClient::request(
   self : JevClient,
   context : String,
   comment : @lib.Comment,
@@ -76,4 +96,35 @@ pub fn JevClient::judge_fn(
   self : JevClient,
 ) -> async (String, @lib.Comment) -> @lib.Triage {
   (context, comment) => self.judge(context, comment)
+}
+
+///|
+/// ログに出す形。HTTP エラーはステータスと本文の先頭だけを出す。
+pub impl Show for JevError with fn output(self, logger) {
+  match self {
+    HttpStatus(code, body) => {
+      let head = if body.char_length() > 200 {
+        body
+        .view(end_offset=body.offset_of_nth_char(200).unwrap_or(body.length()))
+        .to_owned()
+      } else {
+        body
+      }
+      logger.write_string("Jev が HTTP \{code} を返しました: \{head}")
+    }
+    InvalidJson(message) =>
+      logger.write_string(
+        "Jev の応答が JSON ではありません: \{message}",
+      )
+    BadResponse(err) => {
+      logger.write_string("Jev の応答を解釈できません: ")
+      logger.write_object(Repr(err))
+    }
+  }
+}
+
+///|
+/// 待てば直る見込みのある失敗か（レート制限と、ゲートウェイ・サーバ側のエラー）。
+fn is_transient_status(code : Int) -> Bool {
+  code == 429 || (code >= 500 && code <= 599)
 }

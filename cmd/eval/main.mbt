@@ -57,6 +57,8 @@ async fn run(data : String, context : String, threshold : Double) -> Unit {
   let by_kind = PickupScore::new()
   let latencies : Array[Int] = []
   let misses : Array[String] = []
+  // 正解の kind ごとの priority（Jev に投げた分だけ）
+  let priorities : Map[String, Array[Double]] = Map([])
   let mut early = 0
   let mut failed = 0
   println("# yuru-come 仕分け評価")
@@ -83,6 +85,10 @@ async fn run(data : String, context : String, threshold : Double) -> Unit {
       }
       latencies.push((@async.now() - started).to_int())
       jev_only.add(row.kind, triage.kind)
+      match priorities.get(row.kind.key()) {
+        Some(values) => values.push(triage.priority)
+        None => priorities[row.kind.key()] = [triage.priority]
+      }
       (triage.kind, triage.priority)
     }
     overall.add(row.kind, kind)
@@ -125,6 +131,26 @@ async fn run(data : String, context : String, threshold : Double) -> Unit {
   println(
     "| 種類だけ | \{percent(by_kind.precision())} | \{percent(by_kind.recall())} |",
   )
+  println("")
+  println("## priority（正解の kind ごと、Jev に投げた分だけ）")
+  println("")
+  println("| 正解の kind | 件数 | 平均 | 最小 | 最大 |")
+  println("| --- | --- | --- | --- | --- |")
+  for kind in kind_order {
+    guard priorities.get(kind.key()) is Some(values) else { continue }
+    let sum = values.fold(init=0.0, (a, b) => a + b)
+    let lowest = values.fold(init=values[0], (a, b) => if b < a { b } else { a })
+    let highest = values.fold(init=values[0], (a, b) => {
+      if b > a {
+        b
+      } else {
+        a
+      }
+    })
+    println(
+      "| \{kind.key()} | \{values.length()} | \{format_hundredths(sum / values.length().to_double())} | \{format_hundredths(lowest)} | \{format_hundredths(highest)} |",
+    )
+  }
   println("")
   println(
     "## 所要時間（Jev 1 リクエスト = kind + priority の 2 質問）",
