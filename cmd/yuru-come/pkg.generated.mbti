@@ -1,0 +1,49 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/cmd/yuru-come"
+
+import {
+  "hiroyannnn/yuru-come/lib",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub const DEFAULT_PORT : Int = 8791
+
+pub fn parse_cli(ArrayView[String]) -> CliOptions raise CliError
+
+pub let usage : String
+
+// Errors
+pub suberror CliError {
+  MissingValue(String)
+  UnknownOption(String)
+  BadNumber(String)
+  BadValue(String, String)
+  Help
+} derive(@debug.Debug)
+
+// Types and methods
+pub(all) struct CliOptions {
+  sources : Array[String]
+  sinks : Array[String]
+  port : Int
+  host : String
+  context : String
+  twitch_channel : String?
+  youtube_video_id : String?
+  replay_path : String?
+  speed : Double
+  stdin_source : String
+  web_dir : String
+  workers : Int
+  queue_limit : Int
+  window_sec : Int
+  threshold : Double
+  metric : @lib.BundleMetric
+  reaction_words : Array[String]
+  priority_threshold : Double
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits

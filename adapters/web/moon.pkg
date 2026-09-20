@@ -1,0 +1,12 @@
+import {
+  "hiroyannnn/yuru-come/lib",
+  "hiroyannnn/yuru-come/runtime",
+  "moonbitlang/core/json",
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+  "moonbitlang/async/http",
+  "moonbitlang/async/io",
+  "moonbitlang/async/socket",
+}
+
+supported_targets = "-all+native"

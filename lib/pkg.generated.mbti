@@ -56,6 +56,8 @@ pub fn pong_line(String) -> String
 
 pub let priority_levels : Array[String]
 
+pub fn render_pickup_line(FlowEntry) -> String?
+
 pub fn replay_delay_ms(Int64, Int64, Double) -> Int
 
 pub fn twitch_login_lines(String, String) -> Array[String]
@@ -234,6 +236,7 @@ pub(all) enum Kind {
 pub fn Kind::description(Self) -> String
 pub fn Kind::from_key(String) -> Self?
 pub fn Kind::key(Self) -> String
+pub fn Kind::label(Self) -> String
 pub impl ToJson for Kind
 
 pub(all) struct LiveChatPage {

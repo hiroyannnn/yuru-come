@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/adapters/web"
+
+import {
+  "hiroyannnn/yuru-come/lib",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct WebServer {
+  engine : @lib.Engine
+  host : String
+  port : Int
+  web_dir : String
+}
+pub fn WebServer::new(@lib.Engine, host? : String, port? : Int, web_dir? : String) -> Self
+pub async fn WebServer::serve(Self) -> Unit
+
+// Type aliases
+
+// Traits

@@ -106,3 +106,21 @@ pub fn Kind::description(self : Kind) -> String {
 pub impl ToJson for Kind with fn to_json(self) {
   Json::string(self.key())
 }
+
+///|
+/// 画面に出す日本語のラベル。
+pub fn Kind::label(self : Kind) -> String {
+  match self {
+    Question => "質問"
+    Request => "リクエスト"
+    Feedback => "感想"
+    Correction => "指摘"
+    Greeting => "挨拶"
+    FirstTime => "初見"
+    Trouble => "トラブル"
+    Abuse => "荒らし"
+    Chatter => "雑談"
+    Reaction => "反応"
+    Unjudged => "未判定"
+  }
+}

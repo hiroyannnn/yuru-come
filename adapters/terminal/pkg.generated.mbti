@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/adapters/terminal"
+
+import {
+  "hiroyannnn/yuru-come/lib",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct TerminalSink {
+  mut printed : Int
+}
+pub fn TerminalSink::new() -> Self
+pub impl @lib.Sink for TerminalSink
+
+// Type aliases
+
+// Traits
