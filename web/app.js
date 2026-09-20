@@ -155,7 +155,8 @@ function renderStats(state) {
   fill.style.width = `${Math.min(100, Math.round(ratio * 100))}%`;
   fill.classList.toggle("busy", ratio >= 0.5 && ratio < 0.9);
   fill.classList.toggle("full", ratio >= 0.9);
-  $("queue-text").textContent = `判定待ち ${s.queue_length} / ${s.queue_limit}（判定中 ${s.in_flight}）`;
+  const delay = (s.judge_delay_ms / 1000).toFixed(1);
+  $("queue-text").textContent = `判定待ち ${s.queue_length} / ${s.queue_limit}（判定中 ${s.in_flight}）／ 直近の判定の遅れ ${delay} 秒`;
   const skipped = s.early + s.inherited;
   const percent = s.received ? Math.round((100 * skipped) / s.received) : 0;
   const stats = $("stats");

@@ -151,6 +151,7 @@ pub struct Engine {
   mut failed : Int
   mut dropped : Int
   mut in_flight : Int
+  mut judge_delay_ms : Int64
 }
 pub fn Engine::add_sink(Self, &Sink) -> Unit
 pub fn Engine::complete(Self, Pending, Triage?, Int64) -> Unit
@@ -193,6 +194,7 @@ pub(all) struct EngineStats {
   queue_length : Int
   queue_limit : Int
   in_flight : Int
+  judge_delay_ms : Int64
 } derive(Eq, ToJson, @debug.Debug)
 
 pub(all) struct FlowEntry {
@@ -274,6 +276,7 @@ pub(all) struct Pending {
   bundle_key : String
   leads_bundle : Bool
   length : Int
+  at : Int64
 } derive(Eq, @debug.Debug)
 
 pub(all) struct PickupConfig {

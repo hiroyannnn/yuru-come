@@ -293,3 +293,29 @@ test "状態は JSON にできる" {
     assert_true(root.contains(key), msg=key)
   }
 }
+
+///|
+test "判定待ちは新しいものから判定する（滞留しても拾い上げが古くならないように）" {
+  let engine = @lib.Engine::new()
+  engine.ingest(viewer("a", "最初に来た長めのコメントです"), 0)
+  engine.ingest(
+    viewer("b", "二番目に来た長めのコメントです"),
+    10,
+  )
+  engine.ingest(viewer("c", "最後に来た長めのコメントです"), 20)
+  let order : Array[String] = []
+  while engine.take_next() is Some(pending) {
+    order.push(pending.comment.author)
+    engine.complete(pending, fake_judge(pending.comment), 30)
+  }
+  assert_eq(order, ["c", "b", "a"])
+}
+
+///|
+test "直近の判定が、コメントの到着から何ミリ秒遅れて返ったかを状態に出す" {
+  let engine = @lib.Engine::new()
+  assert_eq(engine.state(0).stats.judge_delay_ms, 0)
+  engine.ingest(viewer("a", "これ何のゲームですか？"), 1000)
+  judge_all(engine, 4500) |> ignore
+  assert_eq(engine.state(5000).stats.judge_delay_ms, 3500)
+}

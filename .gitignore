@@ -3,4 +3,6 @@ _build/
 target/
 target
 .mooncakes/
-.moonagent/.env
+.moonagent/
+.env
+node_modules/

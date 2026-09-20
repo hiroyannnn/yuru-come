@@ -78,6 +78,8 @@ pub(all) struct Pending {
   leads_bundle : Bool
   /// 正規化後の文字数（落とす候補を選ぶのに使う）
   length : Int
+  /// エンジンに届いた時刻
+  at : Int64
 } derive(Debug, Eq)
 
 ///|
@@ -97,6 +99,8 @@ pub(all) struct EngineStats {
   queue_length : Int
   queue_limit : Int
   in_flight : Int
+  /// 直近の判定が、コメントの到着から何ミリ秒遅れて返ったか
+  judge_delay_ms : Int64
 } derive(Debug, Eq, ToJson)
 
 ///|
@@ -176,6 +180,7 @@ pub struct Engine {
   mut failed : Int
   mut dropped : Int
   mut in_flight : Int
+  mut judge_delay_ms : Int64
 }
 
 ///|
@@ -200,6 +205,7 @@ pub fn Engine::new(config? : EngineConfig = EngineConfig::new()) -> Engine {
     failed: 0,
     dropped: 0,
     in_flight: 0,
+    judge_delay_ms: 0,
   }
 }
 
@@ -286,6 +292,7 @@ pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
         bundle_key: hit.key,
         leads_bundle,
         length: key.char_length(),
+        at: now,
       })
       self.shed_overflow()
     }
@@ -316,11 +323,13 @@ fn Engine::shed_overflow(self : Engine) -> Unit {
 
 ///|
 /// 次に判定するコメントを取り出す。無ければ None。
+/// 新しいものから判定する。滞留したときに、拾い上げが何十秒も前のコメントばかりになるのを避けるため。
+/// 古いものは後回しになり、あふれたら `shed_overflow` が未判定のまま流す。
 pub fn Engine::take_next(self : Engine) -> Pending? {
-  guard self.queue.length() > 0 else { return None }
+  guard self.queue.pop() is Some(pending) else { return None }
   self.sent += 1
   self.in_flight += 1
-  Some(self.queue.remove(0))
+  Some(pending)
 }
 
 ///|
@@ -332,6 +341,7 @@ pub fn Engine::complete(
   now : Int64,
 ) -> Unit {
   self.in_flight -= 1
+  self.judge_delay_ms = now - pending.at
   match triage {
     Some(triage) => {
       self.judged += 1
@@ -488,6 +498,7 @@ pub fn Engine::state(
       queue_length: self.queue.length(),
       queue_limit: self.config.queue_limit,
       in_flight: self.in_flight,
+      judge_delay_ms: self.judge_delay_ms,
     },
   }
 }

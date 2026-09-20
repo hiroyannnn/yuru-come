@@ -1,0 +1,12 @@
+{
+  "name": "yuru-come-tiktok-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TikTok LIVE のコメントを 参加者ID<TAB>発言 で標準出力に流し、yuru-come の stdin Source にパイプする非公式ブリッジ",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": { "yuru-come-tiktok-bridge": "./bridge.mjs" },
+  "dependencies": {
+    "tiktok-live-connector": "2.4.0"
+  }
+}
