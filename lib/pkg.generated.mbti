@@ -114,6 +114,39 @@ pub fn Kind::from_key(String) -> Self?
 pub fn Kind::key(Self) -> String
 pub impl ToJson for Kind
 
+pub(all) struct PickupConfig {
+  priority_threshold : Double
+  fade_ms : Int64
+  expire_ms : Int64
+} derive(@debug.Debug)
+pub fn PickupConfig::new(priority_threshold? : Double, fade_ms? : Int64, expire_ms? : Int64) -> Self
+pub fn PickupConfig::should_pick_up(Self, Kind, Double) -> Bool
+
+type PickupItem
+
+pub struct PickupList {
+  config : PickupConfig
+  mut items : Array[PickupItem]
+  mut next_id : Int
+}
+pub fn PickupList::bump(Self, Int) -> Unit
+pub fn PickupList::dismiss(Self, Int) -> Bool
+pub fn PickupList::new(config? : PickupConfig) -> Self
+pub fn PickupList::offer(Self, Comment, Kind, Double, Int64) -> Int?
+pub fn PickupList::prune(Self, Int64) -> Unit
+pub fn PickupList::view(Self, Int64) -> Array[PickupView]
+
+pub(all) struct PickupView {
+  id : Int
+  comment : Comment
+  kind : Kind
+  priority : Double
+  at : Int64
+  count : Int
+  faded : Bool
+  pinned : Bool
+} derive(Eq, ToJson, @debug.Debug)
+
 pub struct ReactionRules {
   words : Map[String, Unit]
 }
