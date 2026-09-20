@@ -286,10 +286,11 @@ pub struct Pending {
 
 pub(all) struct PickupConfig {
   priority_threshold : Double
+  kind_floor : Double
   fade_ms : Int64
   expire_ms : Int64
 } derive(@debug.Debug)
-pub fn PickupConfig::new(priority_threshold? : Double, fade_ms? : Int64, expire_ms? : Int64) -> Self
+pub fn PickupConfig::new(priority_threshold? : Double, kind_floor? : Double, fade_ms? : Int64, expire_ms? : Int64) -> Self
 pub fn PickupConfig::should_pick_up(Self, Kind, Double) -> Bool
 
 type PickupItem

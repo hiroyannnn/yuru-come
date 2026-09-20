@@ -42,6 +42,7 @@ pub(all) struct CliOptions {
   metric : @lib.BundleMetric
   reaction_words : Array[String]
   priority_threshold : Double
+  pickup_floor : Double
 } derive(@debug.Debug)
 
 // Type aliases

@@ -4,19 +4,41 @@ fn say(text : String) -> @lib.Comment {
 }
 
 ///|
-test "question / request / correction / first_time / trouble は priority が低くても拾う" {
+test "question / request / correction / first_time は priority が下限（既定 0.6）以上なら拾う" {
   let list = @lib.PickupList::new()
-  let kinds : Array[@lib.Kind] = [
-    Question,
-    Request,
-    Correction,
-    FirstTime,
-    Trouble,
-  ]
+  let kinds : Array[@lib.Kind] = [Question, Request, Correction, FirstTime]
   for kind in kinds {
-    assert_true(list.offer(say("a"), kind, 0.2, 0) is Some(_), msg=kind.key())
+    assert_true(list.offer(say("a"), kind, 0.6, 0) is Some(_), msg=kind.key())
   }
-  assert_eq(list.view(0).length(), 5)
+  assert_eq(list.view(0).length(), 4)
+}
+
+///|
+test "拾うべき種類でも、priority が下限に届かない掛け合いは拾わない" {
+  let list = @lib.PickupList::new()
+  assert_eq(list.offer(say("ps5いけよもう"), Request, 0.21, 0), None)
+  assert_eq(list.offer(say("それ違くね？"), Question, 0.59, 0), None)
+  assert_eq(list.view(0), [])
+}
+
+///|
+test "trouble は priority が低くても必ず拾う" {
+  let list = @lib.PickupList::new()
+  assert_true(
+    list.offer(say("音が出てない"), Trouble, 0.05, 0) is Some(_),
+  )
+}
+
+///|
+test "種類の下限は設定で変えられる（0 にすると種類だけで拾う）" {
+  let strict = @lib.PickupList::new(
+    config=@lib.PickupConfig::new(kind_floor=1.0),
+  )
+  assert_eq(strict.offer(say("a"), Request, 0.9, 0), None)
+  let loose = @lib.PickupList::new(
+    config=@lib.PickupConfig::new(kind_floor=0.0),
+  )
+  assert_true(loose.offer(say("a"), Request, 0.0, 0) is Some(_))
 }
 
 ///|

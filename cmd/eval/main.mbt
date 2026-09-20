@@ -1,6 +1,6 @@
 ///|
 let usage : String =
-  #|使い方: moon run --target native cmd/eval -- [--data eval/comments.tsv] [--context <text>] [--priority-threshold 1.5]
+  #|使い方: moon run --target native cmd/eval -- [--data eval/comments.tsv] [--context <text>] [--priority-threshold 1.5] [--pickup-floor 0.6]
   #|
   #|評価セットを 1 件ずつ仕分けて、kind の正解率と混同行列、「拾うべき」の適合率と再現率、所要時間を出す。
   #|本番と同じく、早期判定で reaction と決まったコメントは Jev に投げない。
@@ -15,6 +15,7 @@ async fn main {
   let mut data = "eval/comments.tsv"
   let mut context = DEFAULT_CONTEXT
   let mut threshold = 1.5
+  let mut floor = 0.6
   let mut i = 1
   while i < args.length() {
     match (args[i], args.get(i + 1)) {
@@ -27,6 +28,13 @@ async fn main {
             return
           }
         }
+      ("--pickup-floor", Some(value)) =>
+        floor = @string.parse_double(value) catch {
+          _ => {
+            println("数値ではありません: \{value}\n\n\{usage}")
+            return
+          }
+        }
       _ => {
         println(usage)
         return
@@ -34,13 +42,18 @@ async fn main {
     }
     i += 2
   }
-  run(data, context, threshold) catch {
+  run(data, context, threshold, floor) catch {
     err => println("エラー: \{err}")
   }
 }
 
 ///|
-async fn run(data : String, context : String, threshold : Double) -> Unit {
+async fn run(
+  data : String,
+  context : String,
+  threshold : Double,
+  floor : Double,
+) -> Unit {
   let rows : Array[EvalRow] = []
   for line in @fs.read_file(data).text().split("\n") {
     if parse_eval_line(line.to_owned()) is Some(row) {
@@ -49,8 +62,14 @@ async fn run(data : String, context : String, threshold : Double) -> Unit {
   }
   let client = @jev.JevClient::from_env()
   let rules = @lib.ReactionRules::new()
-  let pickup_config = @lib.PickupConfig::new(priority_threshold=threshold)
-  let kind_only = @lib.PickupConfig::new(priority_threshold=99.0)
+  let pickup_config = @lib.PickupConfig::new(
+    priority_threshold=threshold,
+    kind_floor=floor,
+  )
+  let kind_only = @lib.PickupConfig::new(
+    priority_threshold=99.0,
+    kind_floor=0.0,
+  )
   let overall = Confusion::new()
   let jev_only = Confusion::new()
   let by_rule = PickupScore::new()
@@ -126,7 +145,7 @@ async fn run(data : String, context : String, threshold : Double) -> Unit {
   println("| ルール | 適合率 | 再現率 |")
   println("| --- | --- | --- |")
   println(
-    "| 種類 または priority ≥ \{threshold} | \{percent(by_rule.precision())} | \{percent(by_rule.recall())} |",
+    "| 種類（priority ≥ \{floor}）または priority ≥ \{threshold} | \{percent(by_rule.precision())} | \{percent(by_rule.recall())} |",
   )
   println(
     "| 種類だけ | \{percent(by_kind.precision())} | \{percent(by_kind.recall())} |",

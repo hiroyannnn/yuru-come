@@ -25,6 +25,8 @@ pub(all) struct CliOptions {
   reaction_words : Array[String]
   /// この priority 以上なら種類によらず拾う
   priority_threshold : Double
+  /// 拾うべき種類に求める priority の下限
+  pickup_floor : Double
 } derive(Debug)
 
 ///|
@@ -62,6 +64,7 @@ pub let usage : String =
   #|  --metric levenshtein|jaro-winkler     類似度の種類（既定 levenshtein）
   #|  --reaction-word <word>                早期判定の辞書に足す語（複数指定可）
   #|  --priority-threshold <0..2>           この priority 以上なら種類によらず拾う（既定 1.5。2 より大きくすると種類だけで拾う）
+  #|  --pickup-floor <0..2>                 質問・リクエスト・指摘・初見を拾うのに求める priority の下限（既定 0.6。0 で種類だけで拾う。trouble は常に拾う）
   #|
   #|環境変数: JEV_URL（既定 http://127.0.0.1:8000）、JEV_API_KEY（既定 local）、JEV_MODEL（既定 jev-latest）、YOUTUBE_API_KEY
 
@@ -86,6 +89,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
   let mut threshold = 0.85
   let mut metric : @lib.BundleMetric = NormalizedLevenshtein
   let mut priority_threshold = 1.5
+  let mut pickup_floor = 0.6
   let mut i = 0
   while i < args.length() {
     let flag = args[i]
@@ -156,6 +160,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
         }
       "--reaction-word" => reaction_words.push(value())
       "--priority-threshold" => priority_threshold = double_value()
+      "--pickup-floor" => pickup_floor = double_value()
       _ => raise UnknownOption(flag)
     }
     i += 1
@@ -187,5 +192,6 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
     metric,
     reaction_words,
     priority_threshold,
+    pickup_floor,
   }
 }

@@ -31,6 +31,7 @@ async fn start(options : CliOptions) -> Unit {
       ),
       pickup=@lib.PickupConfig::new(
         priority_threshold=options.priority_threshold,
+        kind_floor=options.pickup_floor,
       ),
     ),
   )

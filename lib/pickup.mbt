@@ -2,6 +2,9 @@
 pub(all) struct PickupConfig {
   /// この priority 以上なら種類によらず拾う
   priority_threshold : Double
+  /// 拾うべき種類（question / request / correction / first_time）に求める priority の下限。
+  /// 視聴者どうしの掛け合いが質問やリクエストと判定されても、Jev が「拾わなくてよい」と見ていれば拾わない
+  kind_floor : Double
   /// 拾ってからこの時間がたつと薄く表示する（ミリ秒）
   fade_ms : Int64
   /// 拾ってからこの時間がたつと消える（ミリ秒）
@@ -11,10 +14,11 @@ pub(all) struct PickupConfig {
 ///|
 pub fn PickupConfig::new(
   priority_threshold? : Double = 1.5,
+  kind_floor? : Double = 0.6,
   fade_ms? : Int64 = 300_000,
   expire_ms? : Int64 = 600_000,
 ) -> PickupConfig {
-  { priority_threshold, fade_ms, expire_ms, }
+  { priority_threshold, kind_floor, fade_ms, expire_ms, }
 }
 
 ///|
@@ -62,8 +66,9 @@ pub fn PickupList::new(
 ///|
 /// 拾うべきコメントか。
 ///
-/// - question / request / correction / first_time / trouble は priority によらず拾う
-/// - それ以外は priority が閾値以上なら拾う
+/// - trouble は priority によらず必ず拾う
+/// - question / request / correction / first_time は priority が下限（kind_floor）以上なら拾う
+/// - それ以外は priority が閾値（priority_threshold）以上なら拾う
 /// - abuse と、Jev が判定していないもの（reaction / 未判定）は拾わない
 pub fn PickupConfig::should_pick_up(
   self : PickupConfig,
@@ -71,7 +76,8 @@ pub fn PickupConfig::should_pick_up(
   priority : Double,
 ) -> Bool {
   match kind {
-    Question | Request | Correction | FirstTime | Trouble => true
+    Trouble => true
+    Question | Request | Correction | FirstTime => priority >= self.kind_floor
     Abuse | Reaction | Unjudged => false
     Feedback | Greeting | Chatter => priority >= self.priority_threshold
   }

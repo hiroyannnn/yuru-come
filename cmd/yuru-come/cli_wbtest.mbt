@@ -25,6 +25,12 @@ test "拾い上げの priority の閾値を変えられる（score が当てに�
 }
 
 ///|
+test "拾うべき種類に求める priority の下限を変えられる" {
+  assert_eq(parse([]).pickup_floor, 0.6)
+  assert_eq(parse(["--pickup-floor", "1.0"]).pickup_floor, 1.0)
+}
+
+///|
 test "README の起動例を解釈できる" {
   let options = parse([
     "--source", "twitch", "--twitch", "somechannel", "--port", "8791", "--context",
