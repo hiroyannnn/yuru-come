@@ -18,13 +18,29 @@ pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]
 
+pub fn parse_irc_line(String) -> @lib.IrcMessage
+
+pub fn parse_live_chat_id(Json) -> String raise @lib.YouTubeError
+
+pub fn parse_live_chat_page(Json) -> @lib.LiveChatPage raise @lib.YouTubeError
+
+pub fn parse_replay_line(String) -> (Int64, @lib.Comment)?
+
 pub fn parse_response(Json) -> @lib.Triage raise @lib.ResponseError
 
 pub fn parse_response_text(String) -> @lib.Triage raise @lib.ResponseError
 
+pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> @lib.Comment?
+
 pub fn participant_id(String, String) -> String
 
+pub fn pong_line(String) -> String
+
 pub let priority_levels : Array[String]
+
+pub fn replay_delay_ms(Int64, Int64, Double) -> Int
+
+pub fn twitch_login_lines(String, String) -> Array[String]
 
 pub fn unify_width(String) -> String
 
@@ -55,9 +71,13 @@ pub using @lib {type EngineStats}
 
 pub using @lib {type FlowEntry}
 
+pub using @lib {type IrcMessage}
+
 pub using @lib {type JudgeStatus}
 
 pub using @lib {type Kind}
+
+pub using @lib {type LiveChatPage}
 
 pub using @lib {type Mood}
 
@@ -80,6 +100,8 @@ pub using @lib {type ResponseError}
 pub using @lib {type Token}
 
 pub using @lib {type Triage}
+
+pub using @lib {type YouTubeError}
 
 pub using @lib {trait Sink}
 

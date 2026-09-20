@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub const DEFAULT_POLLING_INTERVAL_MS : Int = 5000
+
 pub const JEV_MODEL : String = "jev-latest"
 
 pub const KIND_INSTRUCTIONS : String = "これはライブ配信のチャット欄に視聴者が書いたコメントです。このコメントはどの種類か？"
@@ -28,19 +30,39 @@ pub let default_reaction_words : Array[String]
 
 pub let jev_kinds : Array[Kind]
 
+pub fn live_chat_messages_url(String, String, String?) -> String
+
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[Token]
+
+pub fn parse_irc_line(String) -> IrcMessage
+
+pub fn parse_live_chat_id(Json) -> String raise YouTubeError
+
+pub fn parse_live_chat_page(Json) -> LiveChatPage raise YouTubeError
+
+pub fn parse_replay_line(String) -> (Int64, Comment)?
 
 pub fn parse_response(Json) -> Triage raise ResponseError
 
 pub fn parse_response_text(String) -> Triage raise ResponseError
 
+pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> Comment?
+
 pub fn participant_id(String, String) -> String
+
+pub fn pong_line(String) -> String
 
 pub let priority_levels : Array[String]
 
+pub fn replay_delay_ms(Int64, Int64, Double) -> Int
+
+pub fn twitch_login_lines(String, String) -> Array[String]
+
 pub fn unify_width(String) -> String
+
+pub fn videos_list_url(String, String) -> String
 
 // Errors
 pub(all) suberror ResponseError {
@@ -48,6 +70,12 @@ pub(all) suberror ResponseError {
   MissingField(String)
   TypeMismatch(String)
   UnknownKind(String)
+} derive(Eq, @debug.Debug)
+
+pub suberror YouTubeError {
+  VideoNotFound
+  NotLive
+  TypeMismatch(String)
 } derive(Eq, @debug.Debug)
 
 // Types and methods
@@ -176,6 +204,12 @@ pub(all) struct FlowEntry {
   mut pickup_id : Int?
 } derive(ToJson, @debug.Debug)
 
+pub(all) enum IrcMessage {
+  Ping(String)
+  Chat(Comment)
+  Other(String)
+} derive(Eq, @debug.Debug)
+
 pub(all) enum JudgeStatus {
   Early
   Pending
@@ -203,6 +237,12 @@ pub fn Kind::description(Self) -> String
 pub fn Kind::from_key(String) -> Self?
 pub fn Kind::key(Self) -> String
 pub impl ToJson for Kind
+
+pub(all) struct LiveChatPage {
+  comments : Array[Comment]
+  next_page_token : String?
+  polling_interval_ms : Int
+} derive(@debug.Debug)
 
 pub struct Mood {
   retention_ms : Int64
