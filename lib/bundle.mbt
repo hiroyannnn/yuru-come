@@ -35,6 +35,8 @@ pub(all) struct BundleHit {
   key : String
   /// このコメントを含めた、時間窓の中の件数
   count : Int
+  /// キーの完全一致（または新しい束）なら true、類似度で入ったなら false
+  exact : Bool
 } derive(Debug, Eq)
 
 ///|
@@ -149,7 +151,7 @@ pub fn Bundler::add(
     bundle.representative = text
   }
   bundle.entries.push({ at: now, participant_id: comment.participant_id, })
-  { key: bundle.key, count: bundle.entries.length(), }
+  { key: bundle.key, count: bundle.entries.length(), exact: bundle.key == key, }
 }
 
 ///|

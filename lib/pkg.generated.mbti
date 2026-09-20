@@ -12,6 +12,10 @@ pub const KIND_INSTRUCTIONS : String = "これはライブ配信のチャット�
 
 pub const KIND_QUESTION_KEY : String = "kind"
 
+pub const MOOD_LONG_WINDOW_MS : Int64 = 300_000
+
+pub const MOOD_SHORT_WINDOW_MS : Int64 = 30_000
+
 pub const PRIORITY_INSTRUCTIONS : String = "配信者がこのコメントを読み上げたり返事をしたりして拾うべき度合いは？配信者への質問、ミスの指摘、初見の挨拶、配信トラブルの報告は拾うべき。視聴者同士の雑談、ただの相づち、荒らしは拾わなくてよい。"
 
 pub const PRIORITY_QUESTION_KEY : String = "priority"
@@ -62,6 +66,7 @@ type BundleEntry
 pub(all) struct BundleHit {
   key : String
   count : Int
+  exact : Bool
 } derive(Eq, @debug.Debug)
 
 pub(all) enum BundleMetric {
@@ -76,6 +81,8 @@ pub(all) struct BundleSummary {
   participants : Int
   last_at : Int64
 } derive(Eq, ToJson, @debug.Debug)
+
+type BundleVerdict
 
 pub struct Bundler {
   config : BundleConfig
@@ -95,6 +102,89 @@ pub(all) struct Comment {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String]) -> Self
 pub fn Comment::platform(Self) -> String
+
+pub struct Engine {
+  config : EngineConfig
+  rules : ReactionRules
+  bundler : Bundler
+  pickup : PickupList
+  mood : Mood
+  sinks : Array[&Sink]
+  flow : Array[FlowEntry]
+  mood_ids : Map[Int, Int]
+  queue : Array[Pending]
+  verdicts : Map[String, BundleVerdict]
+  mut next_entry_id : Int
+  mut received : Int
+  mut early : Int
+  mut inherited : Int
+  mut sent : Int
+  mut judged : Int
+  mut failed : Int
+  mut dropped : Int
+  mut in_flight : Int
+}
+pub fn Engine::add_sink(Self, &Sink) -> Unit
+pub fn Engine::complete(Self, Pending, Triage?, Int64) -> Unit
+pub fn Engine::context(Self) -> String
+pub fn Engine::dismiss(Self, Int) -> Bool
+pub fn Engine::ingest(Self, Comment, Int64) -> Unit
+pub fn Engine::new(config? : EngineConfig) -> Self
+pub fn Engine::state(Self, Int64, flow_limit? : Int) -> EngineState
+pub fn Engine::take_next(Self) -> Pending?
+
+pub(all) struct EngineConfig {
+  context : String
+  queue_limit : Int
+  flow_limit : Int
+  reaction_words : Array[String]
+  bundle : BundleConfig
+  pickup : PickupConfig
+} derive(@debug.Debug)
+pub fn EngineConfig::new(context? : String, queue_limit? : Int, flow_limit? : Int, reaction_words? : Array[String], bundle? : BundleConfig, pickup? : PickupConfig) -> Self
+
+pub(all) struct EngineState {
+  now : Int64
+  context : String
+  pickups : Array[PickupView]
+  bundles : Array[BundleSummary]
+  mood_short : MoodSnapshot
+  mood_long : MoodSnapshot
+  flow : Array[FlowEntry]
+  stats : EngineStats
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct EngineStats {
+  received : Int
+  early : Int
+  inherited : Int
+  sent : Int
+  judged : Int
+  failed : Int
+  dropped : Int
+  queue_length : Int
+  queue_limit : Int
+  in_flight : Int
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct FlowEntry {
+  id : Int
+  comment : Comment
+  mut kind : Kind
+  mut priority : Double?
+  mut status : JudgeStatus
+  mut pickup_id : Int?
+} derive(ToJson, @debug.Debug)
+
+pub(all) enum JudgeStatus {
+  Early
+  Pending
+  Judged
+  Inherited
+  Dropped
+  Failed
+} derive(Eq, @debug.Debug)
+pub impl ToJson for JudgeStatus
 
 pub(all) enum Kind {
   Question
@@ -136,6 +226,14 @@ pub(all) struct MoodSnapshot {
   participants : Int
   top_reactions : Array[ReactionCount]
 } derive(ToJson, @debug.Debug)
+
+pub(all) struct Pending {
+  entry_id : Int
+  comment : Comment
+  bundle_key : String
+  leads_bundle : Bool
+  length : Int
+} derive(Eq, @debug.Debug)
 
 pub(all) struct PickupConfig {
   priority_threshold : Double
@@ -198,3 +296,10 @@ pub fn Triage::kind_probability(Self, Kind) -> Double
 // Type aliases
 
 // Traits
+pub(open) trait Sink {
+  fn on_entry(Self, FlowEntry) -> Unit
+}
+
+pub(open) trait Source {
+  async fn run(Self, async (Comment) -> Unit) -> Unit
+}

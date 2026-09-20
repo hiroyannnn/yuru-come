@@ -129,3 +129,15 @@ test "束の一覧は件数の多い順で、件数の下限と個数の上限�
   assert_eq(bundler.summaries(10, limit=1).length(), 1)
   assert_eq(bundler.summaries(10, min_count=1).length(), 3)
 }
+
+///|
+test "完全一致で入ったか、類似度で入ったかを区別できる" {
+  let bundler = @lib.Bundler::new()
+  assert_true(add_text(bundler, "a", "おめでとうございます", 0).exact)
+  assert_true(
+    add_text(bundler, "b", "おめでとうございます！！", 1).exact,
+  )
+  assert_false(
+    add_text(bundler, "c", "おめでとおございます", 2).exact,
+  )
+}
