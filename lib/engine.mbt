@@ -69,18 +69,19 @@ pub(all) struct FlowEntry {
 
 ///|
 /// Jev の判定を待っているコメント。`take_next` で受け取り、`complete` で結果を返す。
-pub(all) struct Pending {
-  entry_id : Int
+pub struct Pending {
   comment : Comment
-  /// 束のキー（相乗りの判定結果を引くのに使う）
-  bundle_key : String
-  /// この束の先頭として判定結果を束に残すか
-  leads_bundle : Bool
+  /// 流れの項目そのもの。流れの上限で押し出されたあとでも、判定結果の反映と Sink への通知ができる
+  entry : FlowEntry
+  /// 空気の記録 ID（判定後に種類を付け替える）
+  mood_id : Int
+  /// この束の先頭として判定結果を残す先。類似度だけで束に入って個別に判定するコメントは None
+  verdict : BundleVerdict?
   /// 正規化後の文字数（落とす候補を選ぶのに使う）
   length : Int
   /// エンジンに届いた時刻
   at : Int64
-} derive(Debug, Eq)
+}
 
 ///|
 /// 処理の内訳。
@@ -141,14 +142,20 @@ pub const MOOD_LONG_WINDOW_MS : Int64 = 300_000
 
 ///|
 /// 束ごとの判定結果。同じ束に入った後続のコメントは、これに相乗りして Jev を呼ばない。
-struct BundleVerdict {
+pub struct BundleVerdict {
   /// 先頭のコメントの判定結果。None は判定待ち
   mut decided : (Kind, Double?)?
   mut pickup_id : Int?
-  /// 先頭の判定を待っている後続（流れの項目 ID）
-  followers : Array[Int]
-  /// 最後に触った時刻。束の時間窓を過ぎたら捨てる
+  /// 先頭の判定を待っている後続（流れの項目と、空気の記録 ID）
+  followers : Array[(FlowEntry, Int)]
+  created_at : Int64
+  /// 最後に触った時刻
   mut touched_at : Int64
+}
+
+///|
+fn BundleVerdict::new(decided : (Kind, Double?)?, now : Int64) -> BundleVerdict {
+  { decided, pickup_id: None, followers: [], created_at: now, touched_at: now, }
 }
 
 ///|
@@ -166,8 +173,6 @@ pub struct Engine {
   sinks : Array[&Sink]
   /// 古い順
   flow : Array[FlowEntry]
-  /// 流れの項目 ID → 空気の記録 ID（判定後に種類を付け替える）
-  mood_ids : Map[Int, Int]
   /// 古い順
   queue : Array[Pending]
   verdicts : Map[String, BundleVerdict]
@@ -193,7 +198,6 @@ pub fn Engine::new(config? : EngineConfig = EngineConfig::new()) -> Engine {
     mood: Mood::new(retention_ms=MOOD_LONG_WINDOW_MS),
     sinks: [],
     flow: [],
-    mood_ids: Map([]),
     queue: [],
     verdicts: Map([]),
     next_entry_id: 1,
@@ -239,11 +243,10 @@ pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
   self.next_entry_id += 1
   self.flow.push(entry)
   if self.flow.length() > self.config.flow_limit {
-    let removed = self.flow.remove(0)
-    self.mood_ids.remove(removed.id)
+    self.flow.remove(0) |> ignore
   }
   let label = comment.text.trim(chars=" \t\r\n\u3000").to_owned()
-  self.mood_ids[entry.id] = self.mood.record(
+  let mood_id = self.mood.record(
     now,
     comment.participant_id,
     Unjudged,
@@ -253,14 +256,9 @@ pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
   if self.rules.is_reaction(comment.text, emotes=comment.emotes) {
     self.early += 1
     if !self.verdicts.contains(hit.key) {
-      self.verdicts[hit.key] = {
-        decided: Some((Reaction, None)),
-        pickup_id: None,
-        followers: [],
-        touched_at: now,
-      }
+      self.verdicts[hit.key] = BundleVerdict::new(Some((Reaction, None)), now)
     }
-    return self.settle(entry, Reaction, None, Early)
+    return self.settle(entry, mood_id, Reaction, None, Early)
   }
   match self.verdicts.get(hit.key) {
     Some({ decided: Some((kind, priority)), .. } as verdict) if !(kind
@@ -268,29 +266,28 @@ pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
       (hit.exact || !is_pickup_kind(kind)) => {
       verdict.touched_at = now
       self.inherited += 1
-      self.follow(entry, verdict, kind, priority)
+      self.follow(entry, mood_id, verdict, kind, priority)
     }
     Some({ decided: None, .. } as verdict) if hit.exact => {
       verdict.touched_at = now
-      verdict.followers.push(entry.id)
+      verdict.followers.push((entry, mood_id))
     }
     existing => {
-      // 束の先頭（または先頭が未判定に終わった束の仕切り直し）なら、判定結果を束に残す
-      let leads_bundle = existing
-        is (None | Some({ decided: Some((Unjudged, _)), .. }))
-      if leads_bundle {
-        self.verdicts[hit.key] = {
-          decided: None,
-          pickup_id: None,
-          followers: [],
-          touched_at: now,
-        }
+      // 束の先頭（または先頭が未判定に終わった束の仕切り直し）なら、判定結果を束に残す。
+      // 拾うべき種類の束や判定待ちの束に類似度だけで入ったコメントは、束に触らず個別に判定する
+      let verdict = if existing
+        is (None | Some({ decided: Some((Unjudged, _)), .. })) {
+        let verdict = BundleVerdict::new(None, now)
+        self.verdicts[hit.key] = verdict
+        Some(verdict)
+      } else {
+        None
       }
       self.queue.push({
-        entry_id: entry.id,
         comment,
-        bundle_key: hit.key,
-        leads_bundle,
+        entry,
+        mood_id,
+        verdict,
         length: key.char_length(),
         at: now,
       })
@@ -308,7 +305,12 @@ fn is_pickup_kind(kind : Kind) -> Bool {
 ///|
 /// キューが上限を超えていたら、古い半分のうちいちばん短いコメントを未判定のまま流す。
 fn Engine::shed_overflow(self : Engine) -> Unit {
-  while self.queue.length() > self.config.queue_limit {
+  let limit = if self.config.queue_limit > 0 {
+    self.config.queue_limit
+  } else {
+    0
+  }
+  while self.queue.length() > limit {
     let older_half = (self.queue.length() + 1) / 2
     let mut victim = 0
     for i in 1..<older_half {
@@ -364,52 +366,46 @@ fn Engine::resolve(
   status : JudgeStatus,
   now? : Int64,
 ) -> Unit {
-  let entry = self.find_entry(pending.entry_id)
   let pickup_id = match (now, priority) {
     (Some(now), Some(priority)) =>
       self.pickup.offer(pending.comment, kind, priority, now)
     _ => None
   }
-  if entry is Some(entry) {
-    entry.pickup_id = pickup_id
-    self.settle(entry, kind, priority, status)
-  }
-  guard pending.leads_bundle &&
-    self.verdicts.get(pending.bundle_key) is Some(verdict) else {
-    return
-  }
+  pending.entry.pickup_id = pickup_id
+  self.settle(pending.entry, pending.mood_id, kind, priority, status)
+  guard pending.verdict is Some(verdict) else { return }
   verdict.decided = Some((kind, priority))
   verdict.pickup_id = pickup_id
   if now is Some(now) {
     verdict.touched_at = now
   }
-  for follower_id in verdict.followers {
-    guard self.find_entry(follower_id) is Some(follower) else { continue }
+  for follower in verdict.followers {
+    let (entry, mood_id) = follower
     if kind is Unjudged {
       // 先頭が未判定に終わったら、相乗り待ちも同じ扱いで流れにだけ出す
-      self.settle(follower, Unjudged, None, status)
+      self.settle(entry, mood_id, Unjudged, None, status)
     } else {
       self.inherited += 1
-      self.follow(follower, verdict, kind, priority)
+      self.follow(entry, mood_id, verdict, kind, priority)
     }
   }
   verdict.followers.clear()
 }
 
 ///|
-/// 束の先頭の判定に相乗りさせる。先頭が拾い上げに入っていれば、その件数を増やす。
+/// 束の先頭の判定に相乗りさせる。先頭が拾い上げに残っていれば、その件数を増やす。
 fn Engine::follow(
   self : Engine,
   entry : FlowEntry,
+  mood_id : Int,
   verdict : BundleVerdict,
   kind : Kind,
   priority : Double?,
 ) -> Unit {
-  if verdict.pickup_id is Some(id) {
-    self.pickup.bump(id)
+  if verdict.pickup_id is Some(id) && self.pickup.bump(id) {
     entry.pickup_id = Some(id)
   }
-  self.settle(entry, kind, priority, Inherited)
+  self.settle(entry, mood_id, kind, priority, Inherited)
 }
 
 ///|
@@ -417,6 +413,7 @@ fn Engine::follow(
 fn Engine::settle(
   self : Engine,
   entry : FlowEntry,
+  mood_id : Int,
   kind : Kind,
   priority : Double?,
   status : JudgeStatus,
@@ -427,32 +424,26 @@ fn Engine::settle(
   if status is Dropped {
     self.dropped += 1
   }
-  if self.mood_ids.get(entry.id) is Some(mood_id) {
-    self.mood.reclassify(mood_id, kind)
-  }
+  self.mood.reclassify(mood_id, kind)
   for sink in self.sinks {
     sink.on_entry(entry)
   }
 }
 
 ///|
-fn Engine::find_entry(self : Engine, id : Int) -> FlowEntry? {
-  // 新しい項目ほど後ろにあるので、後ろから探す
-  for i = self.flow.length() - 1; i >= 0; i = i - 1 {
-    if self.flow[i].id == id {
-      return Some(self.flow[i])
-    }
-  }
-  None
-}
-
-///|
-/// 束の時間窓を過ぎた判定結果を捨てる。判定待ちのものは残す。
+/// 束の時間窓を過ぎた判定結果を捨てる。
+/// 判定待ちのまま窓を過ぎた束も外す（待っている先頭と後続は Pending が持っているので、判定が返れば配られる）。
+/// 外したあとに来た同じコメントは、古い先頭を待たずにあらためて判定に回る。
 fn Engine::forget_stale_verdicts(self : Engine, now : Int64) -> Unit {
   let oldest = now - self.config.bundle.window_ms
   let stale : Array[String] = []
   for key, verdict in self.verdicts {
-    if verdict.decided is Some(_) && verdict.touched_at < oldest {
+    let last = if verdict.decided is None {
+      verdict.created_at
+    } else {
+      verdict.touched_at
+    }
+    if last < oldest {
       stale.push(key)
     }
   }

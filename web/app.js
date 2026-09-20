@@ -210,8 +210,17 @@ function renderFlow(state) {
 
 let lastState = null;
 
+// 画面から消えた ID を覚え続けないようにする
+function forgetGone(state) {
+  const pickupIds = new Set(state.pickups.map((item) => item.id));
+  for (const id of dismissed) if (!pickupIds.has(id)) dismissed.delete(id);
+  const flowIds = new Set(state.flow.map((entry) => entry.id));
+  for (const id of openedAbuse) if (!flowIds.has(id)) openedAbuse.delete(id);
+}
+
 function render(state) {
   lastState = state;
+  forgetGone(state);
   $("context").textContent = state.context ? `文脈: ${state.context}` : "";
   renderPickups(state);
   renderBundles(state);
@@ -220,7 +229,12 @@ function render(state) {
   renderFlow(state);
 }
 
+let refreshing = false;
+
 async function refresh() {
+  // サーバの返事が遅いときに、ポーリングを積み上げない
+  if (refreshing) return;
+  refreshing = true;
   try {
     const response = await fetch("/api/state", { cache: "no-store" });
     if (!response.ok) throw new Error(String(response.status));
@@ -230,6 +244,8 @@ async function refresh() {
   } catch (_) {
     $("conn").textContent = "サーバに接続できません";
     $("conn").classList.add("down");
+  } finally {
+    refreshing = false;
   }
 }
 

@@ -141,3 +141,14 @@ test "完全一致で入ったか、類似度で入ったかを区別できる" 
     add_text(bundler, "c", "おめでとおございます", 2).exact,
   )
 }
+
+///|
+test "代表テキストは時間窓に残っている原文から選ぶ" {
+  let bundler = @lib.Bundler::new()
+  add_text(bundler, "a", "草", 0) |> ignore
+  add_text(bundler, "b", "草！！！", 10_000) |> ignore
+  add_text(bundler, "c", "草www", 20_000) |> ignore
+  assert_eq(bundler.summaries(20_000)[0].representative, "草")
+  // 0ms の「草」が窓から外れたら、残っている中でいちばん短い原文
+  assert_eq(bundler.summaries(35_000)[0].representative, "草！！！")
+}

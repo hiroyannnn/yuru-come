@@ -92,8 +92,8 @@ test "同じコメントが重ねて来たら件数を増やせる" {
     fail("拾われなかった")
   }
   assert_eq(list.view(0)[0].count, 1)
-  list.bump(id)
-  list.bump(id)
+  list.bump(id) |> ignore
+  list.bump(id) |> ignore
   assert_eq(list.view(0)[0].count, 3)
 }
 
@@ -103,4 +103,23 @@ test "項目の ID は重複しない" {
   let a = list.offer(say("a"), Question, 1.0, 0)
   let b = list.offer(say("b"), Question, 1.0, 0)
   assert_true(a is Some(_) && b is Some(_) && a != b)
+}
+
+///|
+test "画面を見ていなくても、新しく拾うたびに期限切れを捨てる" {
+  let list = @lib.PickupList::new()
+  list.offer(say("古い質問？"), Question, 1.0, 0) |> ignore
+  list.offer(say("新しい質問？"), Question, 1.0, 700_000) |> ignore
+  assert_eq(list.size(), 1)
+}
+
+///|
+test "件数を増やせたかどうかが分かる" {
+  let list = @lib.PickupList::new()
+  guard list.offer(say("質問？"), Question, 1.0, 0) is Some(id) else {
+    fail("拾われなかった")
+  }
+  assert_true(list.bump(id))
+  list.dismiss(id) |> ignore
+  assert_false(list.bump(id))
 }

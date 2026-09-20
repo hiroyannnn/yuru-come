@@ -55,13 +55,14 @@ pub(all) struct BundleSummary {
 priv struct BundleEntry {
   at : Int64
   participant_id : String
+  /// 前後の空白を除いた原文
+  text : String
 }
 
 ///|
 struct Bundle {
   key : String
   key_len : Int
-  mut representative : String
   /// 古い順
   mut entries : Array[BundleEntry]
 }
@@ -137,20 +138,12 @@ pub fn Bundler::add(
   let bundle = match self.find(key, key.char_length()) {
     Some(bundle) => bundle
     None => {
-      let bundle : Bundle = {
-        key,
-        key_len: key.char_length(),
-        representative: text,
-        entries: [],
-      }
+      let bundle : Bundle = { key, key_len: key.char_length(), entries: [], }
       self.bundles.push(bundle)
       bundle
     }
   }
-  if text.char_length() < bundle.representative.char_length() {
-    bundle.representative = text
-  }
-  bundle.entries.push({ at: now, participant_id: comment.participant_id, })
+  bundle.entries.push({ at: now, participant_id: comment.participant_id, text, })
   { key: bundle.key, count: bundle.entries.length(), exact: bundle.key == key, }
 }
 
@@ -168,15 +161,20 @@ pub fn Bundler::summaries(
     guard bundle.entries.length() >= min_count else { continue }
     let participants : Map[String, Unit] = Map([])
     let mut last_at : Int64 = 0
+    // 代表テキストは、時間窓に残っている中でいちばん短い原文（同じ長さなら先に来たもの）
+    let mut representative = bundle.entries[0].text
     for entry in bundle.entries {
       participants[entry.participant_id] = ()
       if entry.at > last_at {
         last_at = entry.at
       }
+      if entry.text.char_length() < representative.char_length() {
+        representative = entry.text
+      }
     }
     summaries.push({
       key: bundle.key,
-      representative: bundle.representative,
+      representative,
       count: bundle.entries.length(),
       participants: participants.length(),
       last_at,

@@ -57,7 +57,7 @@ test "反応は Jev のキューに入らず、その場で reaction に決ま�
   assert_eq(state.stats.received, 2)
   assert_eq(state.stats.early, 2)
   assert_eq(flow_kinds(engine, 10), [("wwww", Reaction), ("草", Reaction)])
-  assert_eq(engine.take_next(), None)
+  assert_true(engine.take_next() is None)
 }
 
 ///|
@@ -318,4 +318,74 @@ test "直近の判定が、コメントの到着から何ミリ秒遅れて返�
   engine.ingest(viewer("a", "これ何のゲームですか？"), 1000)
   judge_all(engine, 4500) |> ignore
   assert_eq(engine.state(5000).stats.judge_delay_ms, 3500)
+}
+
+///|
+test "流れから押し出されたあとに判定が返っても、Sink への通知と集計は行う" {
+  let engine = @lib.Engine::new(config=@lib.EngineConfig::new(flow_limit=2))
+  let recorder : Recorder = { seen: [], }
+  engine.add_sink(recorder)
+  engine.ingest(viewer("a", "これ何のゲームですか？"), 0)
+  for i in 0..<3 {
+    engine.ingest(viewer("r\{i}", "草"), 10)
+  }
+  assert_eq(judge_all(engine, 100), 1)
+  let state = engine.state(100)
+  assert_true(
+    recorder.seen.contains(("これ何のゲームですか？", Question)),
+  )
+  assert_eq(state.mood_short.by_kind.get("question"), Some(1))
+  assert_eq(state.mood_short.by_kind.get("unjudged"), None)
+  assert_eq(state.pickups.length(), 1)
+}
+
+///|
+test "流れから押し出されたコメントを間引いても、落とした件数に数える" {
+  let engine = @lib.Engine::new(
+    config=@lib.EngineConfig::new(flow_limit=1, queue_limit=1),
+  )
+  engine.ingest(viewer("a", "短い質問？"), 0)
+  engine.ingest(viewer("b", "こちらはもっと長い質問です？"), 10)
+  assert_eq(engine.state(10).stats.dropped, 1)
+}
+
+///|
+test "束の時間窓を過ぎても判定待ちのままの先頭には相乗りせず、あらためて判定に回す" {
+  let engine = @lib.Engine::new()
+  engine.ingest(viewer("a", "これ何のゲームですか？"), 0)
+  engine.ingest(viewer("b", "これ何のゲームですか？"), 10)
+  assert_eq(engine.state(10).stats.queue_length, 1)
+  // 先頭が 30 秒たっても判定されていない。新しく来た同じコメントは自分で判定を受ける
+  engine.ingest(viewer("c", "これ何のゲームですか？"), 40_000)
+  assert_eq(engine.state(40_000).stats.queue_length, 2)
+  // 新しい順に判定されるので、まず c。古い先頭の判定が返ったら、待っていた b にも配られる
+  assert_eq(judge_all(engine, 41_000), 2)
+  let state = engine.state(41_000)
+  assert_eq(state.flow.map(entry => entry.status), [Judged, Inherited, Judged])
+  // 拾い上げは 2 件。古い先頭のほうに、待っていた b の分が乗る
+  let counts = state.pickups.map(item => (item.comment.author, item.count))
+  assert_eq(counts.length(), 2)
+  assert_true(counts.contains(("a", 2)) && counts.contains(("c", 1)))
+}
+
+///|
+test "既読にした項目に相乗りしたコメントは、拾い上げ済みの印を付けない" {
+  let engine = @lib.Engine::new()
+  engine.ingest(viewer("a", "これ何のゲームですか？"), 0)
+  judge_all(engine, 100) |> ignore
+  engine.dismiss(engine.state(100).pickups[0].id) |> ignore
+  engine.ingest(viewer("b", "これ何のゲームですか？"), 200)
+  let state = engine.state(200)
+  assert_eq(state.flow[0].status, Inherited)
+  assert_eq(state.flow[0].pickup_id, None)
+  assert_eq(state.pickups, [])
+}
+
+///|
+test "キューの上限が 0 以下でも落ちずに、判定に回さず全部を未判定で流す" {
+  let engine = @lib.Engine::new(config=@lib.EngineConfig::new(queue_limit=-1))
+  engine.ingest(viewer("a", "これ何のゲームですか？"), 0)
+  let state = engine.state(0)
+  assert_eq(state.stats.dropped, 1)
+  assert_eq(state.stats.queue_length, 0)
 }

@@ -102,6 +102,15 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
         _ => raise BadNumber(text)
       }
     }
+    // 1 以上でなければならない整数
+    let positive_value = () => {
+      let text = value()
+      let n = @string.parse_int(text) catch { _ => raise BadNumber(text) }
+      if n < 1 {
+        raise BadValue(flag, text)
+      }
+      n
+    }
     let double_value = () => {
       let text = value()
       @string.parse_double(text) catch {
@@ -118,12 +127,26 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
       "--twitch" => twitch_channel = Some(value())
       "--youtube" => youtube_video_id = Some(value())
       "--replay" => replay_path = Some(value())
-      "--speed" => speed = double_value()
+      "--speed" => {
+        let text = value()
+        speed = @string.parse_double(text) catch { _ => raise BadNumber(text) }
+        if speed <= 0.0 {
+          raise BadValue(flag, text)
+        }
+      }
       "--stdin-source" => stdin_source = value()
       "--web-dir" => web_dir = value()
-      "--workers" => workers = int_value()
-      "--queue-limit" => queue_limit = int_value()
-      "--window" => window_sec = int_value()
+      "--workers" => workers = positive_value()
+      "--queue-limit" => {
+        let text = value()
+        queue_limit = @string.parse_int(text) catch {
+          _ => raise BadNumber(text)
+        }
+        if queue_limit < 0 {
+          raise BadValue(flag, text)
+        }
+      }
+      "--window" => window_sec = positive_value()
       "--threshold" => threshold = double_value()
       "--metric" =>
         metric = match value() {

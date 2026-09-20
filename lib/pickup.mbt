@@ -87,6 +87,8 @@ pub fn PickupList::offer(
   now : Int64,
 ) -> Int? {
   guard self.config.should_pick_up(kind, priority) else { return None }
+  // 画面（view）を見ない構成でも溜まり続けないよう、足す前に期限切れを捨てる
+  self.prune(now)
   let id = self.next_id
   self.next_id += 1
   self.items.push({ id, comment, kind, priority, at: now, count: 1, })
@@ -94,14 +96,15 @@ pub fn PickupList::offer(
 }
 
 ///|
-/// 同じコメントが重ねて来たときに件数を増やす。既読・期限切れの ID なら何もしない。
-pub fn PickupList::bump(self : PickupList, id : Int) -> Unit {
+/// 同じコメントが重ねて来たときに件数を増やす。既読・期限切れの ID なら何もせず false。
+pub fn PickupList::bump(self : PickupList, id : Int) -> Bool {
   for item in self.items {
     if item.id == id {
       item.count += 1
-      return
+      return true
     }
   }
+  false
 }
 
 ///|
@@ -144,4 +147,10 @@ pub fn PickupList::view(self : PickupList, now : Int64) -> Array[PickupView] {
     }
   })
   views
+}
+
+///|
+/// 保持している項目の数（期限切れを含む）。
+pub fn PickupList::size(self : PickupList) -> Int {
+  self.items.length()
 }

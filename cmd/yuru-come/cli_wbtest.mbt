@@ -94,3 +94,16 @@ test "値の無いフラグ、知らないフラグ、数値でない値はエ�
 test "--help は Help を返す" {
   assert_true(parse_error(["--help"]) is Some(Help))
 }
+
+///|
+test "本数や上限に使えない値はエラー" {
+  assert_true(
+    parse_error(["--workers", "0"]) is Some(BadValue("--workers", "0")),
+  )
+  assert_true(
+    parse_error(["--queue-limit", "-1"])
+    is Some(BadValue("--queue-limit", "-1")),
+  )
+  assert_true(parse_error(["--window", "0"]) is Some(BadValue("--window", "0")))
+  assert_true(parse_error(["--speed", "0"]) is Some(BadValue("--speed", "0")))
+}
