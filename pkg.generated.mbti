@@ -21,6 +21,16 @@ pub fn unify_width(String) -> String
 // Types and methods
 
 // Type aliases
+pub using @lib {type BundleConfig}
+
+pub using @lib {type BundleHit}
+
+pub using @lib {type BundleMetric}
+
+pub using @lib {type BundleSummary}
+
+pub using @lib {type Bundler}
+
 pub using @lib {type Comment}
 
 pub using @lib {type Token}

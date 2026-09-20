@@ -3,6 +3,11 @@
 pub using @lib {
   type Comment,
   type Token,
+  type BundleMetric,
+  type BundleConfig,
+  type BundleHit,
+  type BundleSummary,
+  type Bundler,
   participant_id,
   normalize,
   normalize_tokens,

@@ -19,6 +19,45 @@ pub fn unify_width(String) -> String
 // Errors
 
 // Types and methods
+type Bundle
+
+pub(all) struct BundleConfig {
+  window_ms : Int64
+  threshold : Double
+  fuzzy_max_len : Int
+  metric : BundleMetric
+} derive(@debug.Debug)
+pub fn BundleConfig::new(window_ms? : Int64, threshold? : Double, fuzzy_max_len? : Int, metric? : BundleMetric) -> Self
+
+type BundleEntry
+
+pub(all) struct BundleHit {
+  key : String
+  count : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) enum BundleMetric {
+  NormalizedLevenshtein
+  JaroWinkler
+} derive(Eq, @debug.Debug)
+
+pub(all) struct BundleSummary {
+  key : String
+  representative : String
+  count : Int
+  participants : Int
+  last_at : Int64
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct Bundler {
+  config : BundleConfig
+  mut bundles : Array[Bundle]
+}
+pub fn Bundler::add(Self, String, Comment, Int64) -> BundleHit
+pub fn Bundler::new(config? : BundleConfig) -> Self
+pub fn Bundler::prune(Self, Int64) -> Unit
+pub fn Bundler::summaries(Self, Int64, min_count? : Int, limit? : Int) -> Array[BundleSummary]
+
 pub(all) struct Comment {
   participant_id : String
   author : String
