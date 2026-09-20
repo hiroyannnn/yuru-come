@@ -22,6 +22,26 @@ function el(tag, className, text) {
   return node;
 }
 
+// ID をキーに DOM を使い回す。毎秒作り直すと、押している最中のボタンが差し替わってクリックが落ちる。
+function syncList(container, items, create, update) {
+  const existing = new Map();
+  for (const node of container.children) existing.set(node.dataset.key, node);
+  const nodes = items.map((item) => {
+    const key = String(item.id);
+    let node = existing.get(key);
+    if (!node) {
+      node = create(item);
+      node.dataset.key = key;
+    }
+    update(node, item);
+    return node;
+  });
+  nodes.forEach((node, index) => {
+    if (container.children[index] !== node) container.insertBefore(node, container.children[index] || null);
+  });
+  while (container.children.length > nodes.length) container.lastElementChild.remove();
+}
+
 function kindColor(node, kind) {
   node.style.setProperty("--kind", `var(--${kind})`);
 }
@@ -37,34 +57,46 @@ function authorText(comment) {
   return `${platform} / ${name}`;
 }
 
+function createPickup(item) {
+  const li = el("li");
+  const button = el("button", "pickup");
+  button.type = "button";
+  const head = el("div", "pickup-head");
+  head.append(
+    el("span", "badge"), el("span", "priority"), el("span", "echo"),
+    el("span", "author"), el("span", "age"),
+  );
+  button.append(head, el("div", "pickup-text"));
+  button.addEventListener("click", () => dismiss(item.id));
+  li.append(button);
+  return li;
+}
+
+function updatePickup(state, li, item) {
+  const button = li.firstElementChild;
+  kindColor(button, item.kind);
+  button.classList.toggle("faded", item.faded);
+  button.classList.toggle("pinned", item.pinned);
+  button.querySelector(".badge").textContent = KINDS[item.kind] || item.kind;
+  button.querySelector(".priority").textContent = `拾う度 ${item.priority.toFixed(1)}`;
+  const echo = button.querySelector(".echo");
+  echo.textContent = item.count > 1 ? `同じコメント ×${item.count}` : "";
+  echo.hidden = item.count <= 1;
+  button.querySelector(".author").textContent = authorText(item.comment);
+  button.querySelector(".age").textContent = ageText(state.now, item.at);
+  button.querySelector(".pickup-text").textContent = item.comment.text;
+}
+
 function renderPickups(state) {
   const items = state.pickups.filter((item) => !dismissed.has(item.id));
   $("pickup-count").textContent = items.length ? String(items.length) : "";
   $("pickups-empty").hidden = items.length > 0;
-  const list = $("pickups");
-  list.replaceChildren(...items.map((item) => {
-    const li = el("li");
-    const button = el("button", "pickup");
-    button.type = "button";
-    kindColor(button, item.kind);
-    if (item.faded) button.classList.add("faded");
-    if (item.pinned) button.classList.add("pinned");
-    button.title = "クリックで既読にする";
-    const head = el("div", "pickup-head");
-    head.append(el("span", "badge", KINDS[item.kind] || item.kind));
-    head.append(el("span", "priority", `拾う度 ${item.priority.toFixed(1)}`));
-    if (item.count > 1) head.append(el("span", "echo", `同じコメント ×${item.count}`));
-    head.append(el("span", "author", authorText(item.comment)));
-    head.append(el("span", "age", ageText(state.now, item.at)));
-    button.append(head, el("div", "pickup-text", item.comment.text));
-    button.addEventListener("click", () => dismiss(item.id));
-    li.append(button);
-    return li;
-  }));
+  syncList($("pickups"), items, createPickup, (li, item) => updatePickup(state, li, item));
 }
 
 async function dismiss(id) {
   dismissed.add(id);
+  if (lastState) renderPickups(lastState);
   try {
     await fetch("/api/dismiss", {
       method: "POST",
@@ -136,32 +168,43 @@ function renderStats(state) {
   );
 }
 
+function createFlowItem() {
+  const li = el("li", "flow-item");
+  li.append(el("span", "dot"), el("span", "who"), el("span", "body"), el("span", "tag"));
+  return li;
+}
+
+function updateFlowItem(li, entry) {
+  const folded = entry.kind === "abuse" && !openedAbuse.has(entry.id);
+  // 変化が無ければ触らない（判定待ち → 判定済み、折りたたみの開閉のときだけ描き直す）
+  const signature = `${entry.kind}|${entry.status}|${entry.pickup_id}|${folded}`;
+  if (li.dataset.signature === signature) return;
+  li.dataset.signature = signature;
+  li.className = "flow-item";
+  kindColor(li, entry.kind);
+  li.classList.toggle("reaction", entry.kind === "reaction");
+  li.classList.toggle("pending", entry.status === "pending");
+  li.classList.toggle("picked", entry.pickup_id != null);
+  li.classList.toggle("abuse", entry.kind === "abuse");
+  li.querySelector(".who").textContent = entry.comment.author || entry.comment.participant_id;
+  const body = li.querySelector(".body");
+  if (folded) {
+    const button = el("button", "", "荒らしと判定（クリックで表示）");
+    button.type = "button";
+    button.addEventListener("click", () => {
+      openedAbuse.add(entry.id);
+      if (lastState) renderFlow(lastState);
+    });
+    body.replaceChildren(button);
+  } else {
+    body.textContent = entry.comment.text;
+  }
+  li.querySelector(".tag").textContent = STATUS_TAGS[entry.status] ||
+    (entry.kind !== "reaction" && entry.kind !== "unjudged" ? KINDS[entry.kind] : "");
+}
+
 function renderFlow(state) {
-  $("flow").replaceChildren(...state.flow.map((entry) => {
-    const li = el("li", "flow-item");
-    kindColor(li, entry.kind);
-    if (entry.kind === "reaction") li.classList.add("reaction");
-    if (entry.status === "pending") li.classList.add("pending");
-    if (entry.pickup_id != null) li.classList.add("picked");
-    li.append(el("span", "dot"));
-    li.append(el("span", "who", entry.comment.author || entry.comment.participant_id));
-    const body = el("span", "body");
-    if (entry.kind === "abuse" && !openedAbuse.has(entry.id)) {
-      li.classList.add("abuse");
-      const button = el("button", "", "荒らしと判定（クリックで表示）");
-      button.type = "button";
-      button.addEventListener("click", () => { openedAbuse.add(entry.id); refresh(); });
-      body.append(button);
-    } else {
-      if (entry.kind === "abuse") li.classList.add("abuse");
-      body.textContent = entry.comment.text;
-    }
-    li.append(body);
-    const tag = STATUS_TAGS[entry.status] ||
-      (entry.kind !== "reaction" && entry.kind !== "unjudged" ? KINDS[entry.kind] : "");
-    if (tag) li.append(el("span", "tag", tag));
-    return li;
-  }));
+  syncList($("flow"), state.flow, createFlowItem, updateFlowItem);
 }
 
 let lastState = null;

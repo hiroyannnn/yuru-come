@@ -15,6 +15,13 @@ test "既定辞書にある短い反応は Jev を呼ばずに reaction と決�
 }
 
 ///|
+test "草の言い換えも辞書で拾う" {
+  for text in ["大草原", "くさ", "草生える", "kusa"] {
+    assert_true(early(text), msg=text)
+  }
+}
+
+///|
 test "辞書は原文ではなく正規化した形で照合する" {
   assert_true(early("かわいいいいい！！！"))
   assert_true(early("ＮＩＣＥ"))
