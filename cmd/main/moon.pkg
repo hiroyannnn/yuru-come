@@ -1,5 +1,0 @@
-// import {
-//   "hiroyannnn/yuru-come" @lib,
-// }
-
-pkgtype(kind: "executable")

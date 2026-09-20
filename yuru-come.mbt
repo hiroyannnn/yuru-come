@@ -1,3 +1,11 @@
-// Main package file for your library code.
-// Put public APIs and shared helpers here.
-// Keep blocks small and focused for easy refactors.
+///|
+/// コア（lib）の公開 API をルートパッケージから直接使えるように再エクスポートする。
+pub using @lib {
+  type Comment,
+  type Token,
+  participant_id,
+  normalize,
+  normalize_tokens,
+  unify_width,
+  compress_runs,
+}

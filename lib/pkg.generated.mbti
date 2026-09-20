@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/lib"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn compress_runs(String) -> String
+
+pub fn normalize(String, emotes? : Array[String]) -> String
+
+pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[Token]
+
+pub fn participant_id(String, String) -> String
+
+pub fn unify_width(String) -> String
+
+// Errors
+
+// Types and methods
+pub(all) struct Comment {
+  participant_id : String
+  author : String
+  text : String
+  at : Int64
+  emotes : Array[String]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String]) -> Self
+pub fn Comment::platform(Self) -> String
+
+pub(all) enum Token {
+  Text(String)
+  Emote(String)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits

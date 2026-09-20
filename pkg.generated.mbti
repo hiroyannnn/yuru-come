@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come"
+
+import {
+  "hiroyannnn/yuru-come/lib",
+}
+
+// Values
+pub fn compress_runs(String) -> String
+
+pub fn normalize(String, emotes? : Array[String]) -> String
+
+pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]
+
+pub fn participant_id(String, String) -> String
+
+pub fn unify_width(String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @lib {type Comment}
+
+pub using @lib {type Token}
+
+// Traits
