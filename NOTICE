@@ -1,0 +1,72 @@
+yuru-come
+Copyright 2026 hiroyannnn
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+--------------------------------------------------------------------------------
+Portions of this product are copied or adapted from hiroyannnn/yuru-poll
+https://github.com/hiroyannnn/yuru-poll
+Copyright 2026 hiroyannnn
+License: Apache License, Version 2.0
+
+  - lib/twitch_parse.mbt, lib/youtube_parse.mbt, lib/stdin_parse.mbt and their tests
+    (extended to extract author names and Twitch emote names)
+  - lib/response.mbt (pattern-matching style of the Jev response parser)
+  - lib/engine.mbt (the Source / Sink traits; `submit` no longer waits for a judgement)
+  - runtime/, jev/, adapters/stdin, adapters/twitch, adapters/youtube,
+    adapters/web/server.mbt (skeleton), cmd/yuru-come/cli.mbt (flag parsing)
+  - eval/ (the metrics are modelled on yuru-poll's eval/run.py)
+
+--------------------------------------------------------------------------------
+This product depends on the following third-party MoonBit packages.
+
+hiroyannnn/strsim (string similarity; normalized Levenshtein and Jaro-Winkler
+are used to bundle near-duplicate short comments)
+https://github.com/hiroyannnn/strsim
+License: Apache License, Version 2.0
+
+The following is the NOTICE file distributed with strsim, reproduced as required
+by section 4(d) of the Apache License:
+
+  hiroyannnn/strsim
+  Copyright 2026 hiroyannnn
+
+  This software includes algorithms derived from strsim-rs:
+  https://github.com/rapidfuzz/strsim-rs
+
+  strsim-rs is licensed under the MIT License:
+
+    Copyright (c) 2015 Danny Guo
+    Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+    Copyright (c) 2018 Akash Kurdekar
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+--------------------------------------------------------------------------------
+moonbitlang/async (event loop, sockets, TLS, HTTP client/server)
+https://github.com/moonbitlang/async
+License: Apache License, Version 2.0
+Copyright 2025 International Digital Economy Academy
+
+--------------------------------------------------------------------------------
+tools/tiktok-bridge (optional, not part of the MoonBit package) depends on the
+npm package tiktok-live-connector, pinned to 2.4.0, the last release published
+under the MIT License (2.4.1 and later are AGPL-3.0-only). It is installed by
+the user with `npm install`; no code from it is included in this repository.
+https://github.com/zerodytrash/TikTok-Live-Connector
