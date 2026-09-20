@@ -6,15 +6,25 @@ import {
 }
 
 // Values
+pub fn build_request(String, context? : String, model? : String) -> Json
+
 pub fn compress_runs(String) -> String
 
 pub let default_reaction_words : Array[String]
+
+pub let jev_kinds : Array[@lib.Kind]
 
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]
 
+pub fn parse_response(Json) -> @lib.Triage raise @lib.ResponseError
+
+pub fn parse_response_text(String) -> @lib.Triage raise @lib.ResponseError
+
 pub fn participant_id(String, String) -> String
+
+pub let priority_levels : Array[String]
 
 pub fn unify_width(String) -> String
 
@@ -35,8 +45,14 @@ pub using @lib {type Bundler}
 
 pub using @lib {type Comment}
 
+pub using @lib {type Kind}
+
 pub using @lib {type ReactionRules}
 
+pub using @lib {type ResponseError}
+
 pub using @lib {type Token}
+
+pub using @lib {type Triage}
 
 // Traits

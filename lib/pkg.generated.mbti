@@ -6,19 +6,45 @@ import {
 }
 
 // Values
+pub const JEV_MODEL : String = "jev-latest"
+
+pub const KIND_INSTRUCTIONS : String = "これはライブ配信のチャット欄に視聴者が書いたコメントです。このコメントはどの種類か？"
+
+pub const KIND_QUESTION_KEY : String = "kind"
+
+pub const PRIORITY_INSTRUCTIONS : String = "配信者がこのコメントを読み上げたり返事をしたりして拾うべき度合いは？配信者への質問、ミスの指摘、初見の挨拶、配信トラブルの報告は拾うべき。視聴者同士の雑談、ただの相づち、荒らしは拾わなくてよい。"
+
+pub const PRIORITY_QUESTION_KEY : String = "priority"
+
+pub fn build_request(String, context? : String, model? : String) -> Json
+
 pub fn compress_runs(String) -> String
 
 pub let default_reaction_words : Array[String]
+
+pub let jev_kinds : Array[Kind]
 
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[Token]
 
+pub fn parse_response(Json) -> Triage raise ResponseError
+
+pub fn parse_response_text(String) -> Triage raise ResponseError
+
 pub fn participant_id(String, String) -> String
+
+pub let priority_levels : Array[String]
 
 pub fn unify_width(String) -> String
 
 // Errors
+pub(all) suberror ResponseError {
+  InvalidJson(String)
+  MissingField(String)
+  TypeMismatch(String)
+  UnknownKind(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 type Bundle
@@ -70,6 +96,24 @@ pub(all) struct Comment {
 pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String]) -> Self
 pub fn Comment::platform(Self) -> String
 
+pub(all) enum Kind {
+  Question
+  Request
+  Feedback
+  Correction
+  Greeting
+  FirstTime
+  Trouble
+  Abuse
+  Chatter
+  Reaction
+  Unjudged
+} derive(Eq, @debug.Debug)
+pub fn Kind::description(Self) -> String
+pub fn Kind::from_key(String) -> Self?
+pub fn Kind::key(Self) -> String
+pub impl ToJson for Kind
+
 pub struct ReactionRules {
   words : Map[String, Unit]
 }
@@ -80,6 +124,15 @@ pub(all) enum Token {
   Text(String)
   Emote(String)
 } derive(Eq, @debug.Debug)
+
+pub(all) struct Triage {
+  kind : Kind
+  kind_probabilities : Map[String, Double]
+  kind_confidence : Double
+  priority : Double
+  priority_confidence : Double
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Triage::kind_probability(Self, Kind) -> Double
 
 // Type aliases
 
