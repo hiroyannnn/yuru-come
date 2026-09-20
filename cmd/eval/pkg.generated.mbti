@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/cmd/eval"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+type Confusion
+
+type EvalRow derive(Eq, @debug.Debug)
+
+type PickupScore
+
+// Type aliases
+
+// Traits

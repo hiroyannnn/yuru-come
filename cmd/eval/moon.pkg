@@ -1,0 +1,12 @@
+import {
+  "hiroyannnn/yuru-come/lib",
+  "hiroyannnn/yuru-come/jev",
+  "moonbitlang/core/env",
+  "moonbitlang/core/string",
+  "moonbitlang/async",
+  "moonbitlang/async/fs",
+}
+
+supported_targets = "-all+native"
+
+pkgtype(kind: "executable")
