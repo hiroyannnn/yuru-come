@@ -165,8 +165,27 @@ fn to_ascii_lower(text : String) -> String {
 }
 
 ///|
+/// カタカナのうち、ひらがなに対応がある ァ〜ン（U+30A1〜U+30F3）をひらがなにする。ヴ・ヵ・ヶ・ー はそのまま。
+fn katakana_to_hiragana(text : String) -> String {
+  let out = StringBuilder()
+  for c in text {
+    let code = c.to_int()
+    if code >= 0x30A1 && code <= 0x30F3 {
+      out.write_char((code - 0x60).unsafe_to_char())
+    } else {
+      out.write_char(c)
+    }
+  }
+  out.to_string()
+}
+
+///|
 fn normalize_text(text : String) -> String {
-  unify_width(text) |> to_ascii_lower |> compress_runs |> strip_trailing_marks
+  unify_width(text)
+  |> to_ascii_lower
+  |> katakana_to_hiragana
+  |> compress_runs
+  |> strip_trailing_marks
 }
 
 ///|
@@ -217,7 +236,7 @@ fn split_word(word : String, emotes : Array[String]) -> Array[Token] {
 ///|
 /// コメントを正規化したトークン列にする。
 ///
-/// - 文字: 全角半角と大文字小文字の統一、空白の整理、同一文字の連続圧縮、末尾の記号ゆれの除去
+/// - 文字: 全角半角・大文字小文字・カタカナひらがなの統一、空白の整理、同一文字の連続圧縮、末尾の記号ゆれの除去
 /// - スタンプ: `emotes`（Twitch のエモート名）に一致する語と `:emoji:` 記法は原文のまま保持
 /// - 同じスタンプの連続は 1 個にする
 pub fn normalize_tokens(

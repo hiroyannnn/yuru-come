@@ -88,3 +88,12 @@ test "トークン列ではスタンプと文字を区別できる" {
   assert_eq(@lib.normalize_tokens("草 :YTgg:"), [Text("草"), Emote(":YTgg:")])
   assert_eq(@lib.normalize_tokens("   "), [])
 }
+
+///|
+test "カタカナはひらがなにそろえる（ナイス と ないす、カワイイ と かわいい を同じ束にする）" {
+  assert_eq(@lib.normalize("ナイス"), @lib.normalize("ないす"))
+  assert_eq(@lib.normalize("カワイイ"), @lib.normalize("かわいい"))
+  assert_eq(@lib.normalize("ｷﾀｰｰ"), @lib.normalize("きたー"))
+  // ヴ・ヵ・ヶ など、ひらがなに対応が無い・使われない文字はそのまま
+  assert_eq(@lib.normalize("ヴァイオリン"), "ヴぁいおりん")
+}
