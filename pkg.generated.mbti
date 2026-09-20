@@ -8,6 +8,8 @@ import {
 // Values
 pub fn compress_runs(String) -> String
 
+pub let default_reaction_words : Array[String]
+
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]
@@ -32,6 +34,8 @@ pub using @lib {type BundleSummary}
 pub using @lib {type Bundler}
 
 pub using @lib {type Comment}
+
+pub using @lib {type ReactionRules}
 
 pub using @lib {type Token}
 

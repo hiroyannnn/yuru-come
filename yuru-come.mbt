@@ -8,6 +8,8 @@ pub using @lib {
   type BundleHit,
   type BundleSummary,
   type Bundler,
+  type ReactionRules,
+  default_reaction_words,
   participant_id,
   normalize,
   normalize_tokens,
