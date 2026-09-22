@@ -54,7 +54,8 @@ function ageText(now, at) {
 function authorText(comment) {
   const platform = comment.participant_id.split(":")[0];
   const name = comment.author || comment.participant_id.split(":").slice(1).join(":");
-  return `${platform} / ${name}`;
+  const place = comment.channel ? `${platform} #${comment.channel}` : platform;
+  return `${place} / ${name}`;
 }
 
 function createPickup(item) {
@@ -187,7 +188,9 @@ function updateFlowItem(li, entry) {
   li.classList.toggle("pending", entry.status === "pending");
   li.classList.toggle("picked", entry.pickup_id != null);
   li.classList.toggle("abuse", entry.kind === "abuse");
-  li.querySelector(".who").textContent = entry.comment.author || entry.comment.participant_id;
+  const who = entry.comment.author || entry.comment.participant_id;
+  li.querySelector(".who").textContent = entry.comment.channel ? `#${entry.comment.channel} ${who}` : who;
+  li.querySelector(".who").title = authorText(entry.comment);
   const body = li.querySelector(".body");
   if (folded) {
     const button = el("button", "", "荒らしと判定（クリックで表示）");

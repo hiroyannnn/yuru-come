@@ -45,7 +45,7 @@ pub impl @lib.Source for YouTubeSource with fn run(self, submit) {
       }
     }
     for comment in page.comments {
-      submit(comment)
+      submit({ ..comment, channel: self.video_id, })
     }
     page_token = page.next_page_token
     let wait = if page.polling_interval_ms > self.min_interval_ms {

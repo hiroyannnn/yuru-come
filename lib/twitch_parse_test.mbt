@@ -10,6 +10,7 @@ test "PRIVMSG（tags 付き）を Comment にする。ID は twitch:<user-id>、
         "これ何のゲーム？",
         author="Alice",
         at=1700000000123,
+        channel="somechannel",
       ),
     ),
   )
@@ -20,7 +21,14 @@ test "tags が無い PRIVMSG は nick を ID と投稿者にし、at は 0" {
   let line = ":bob!bob@bob.tmi.twitch.tv PRIVMSG #ch :初見です"
   assert_eq(
     @lib.parse_irc_line(line),
-    Chat(@lib.Comment::new("twitch:bob", "初見です", author="bob")),
+    Chat(
+      @lib.Comment::new(
+        "twitch:bob",
+        "初見です",
+        author="bob",
+        channel="ch",
+      ),
+    ),
   )
 }
 
@@ -82,4 +90,13 @@ test "twitch_login_lines は匿名ユーザーでの CAP/NICK/JOIN 行を作る"
   assert_eq(@lib.twitch_login_lines("justinfan777", "SomeChannel"), [
     "CAP REQ :twitch.tv/tags", "NICK justinfan777", "JOIN #somechannel",
   ])
+}
+
+///|
+test "PRIVMSG の宛先チャンネルを Comment に残す（# は取り除く、大文字は小文字に）" {
+  let line = ":bob!bob@bob.tmi.twitch.tv PRIVMSG #SomeChannel :hi"
+  guard @lib.parse_irc_line(line) is Chat(comment) else {
+    fail("Chat でない")
+  }
+  assert_eq(comment.channel, "somechannel")
 }

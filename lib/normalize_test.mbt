@@ -97,3 +97,9 @@ test "カタカナはひらがなにそろえる（ナイス と ないす、カ
   // ヴ・ヵ・ヶ など、ひらがなに対応が無い・使われない文字はそのまま
   assert_eq(@lib.normalize("ヴァイオリン"), "ヴぁいおりん")
 }
+
+///|
+test "Comment のチャンネルは省略すると空" {
+  assert_eq(@lib.Comment::new("stdin:a", "hi").channel, "")
+  assert_eq(@lib.Comment::new("twitch:1", "hi", channel="ch").channel, "ch")
+}

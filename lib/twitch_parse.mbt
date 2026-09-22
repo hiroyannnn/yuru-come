@@ -46,6 +46,8 @@ pub fn parse_irc_line(raw : String) -> IrcMessage {
     "PING" => Ping(trailing_of(params))
     "PRIVMSG" => {
       let text = trailing_of(params)
+      let (target, _) = split_once(params, ' ')
+      let channel = target.trim_start(chars="#").to_owned().to_lower()
       let id = match tags.get("user-id") {
         Some(user_id) if !user_id.is_empty() => user_id
         _ => nick_of(prefix)
@@ -68,6 +70,7 @@ pub fn parse_irc_line(raw : String) -> IrcMessage {
         text,
         at,
         emotes,
+        channel,
       })
     }
     _ => Other(line)
