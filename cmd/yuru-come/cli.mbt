@@ -49,7 +49,7 @@ pub let usage : String =
   #|  --source stdin|twitch|youtube|replay  コメントの入口（複数指定可、既定 stdin）
   #|  --sink web|terminal                   出口（複数指定可、既定 web）
   #|  --twitch <channel>                    Twitch のチャンネル名（--source twitch 用、複数指定可）
-  #|  --youtube <videoId>                   YouTube Live の動画 ID（--source youtube 用、YOUTUBE_API_KEY が必要）
+  #|  --youtube <videoId>                   YouTube Live の動画 ID（--source youtube 用。YOUTUBE_API_KEY があれば Data API、無ければキー無しで読む）
   #|  --replay <file.tsv>                   再生するログ（--source replay 用。時刻ms<TAB>参加者ID<TAB>発言）
   #|  --speed <n>                           replay の再生速度（既定 1）
   #|  --stdin-source <name>                 stdin の参加者 ID に付ける名前（既定 stdin。TikTok ブリッジなら tiktok）

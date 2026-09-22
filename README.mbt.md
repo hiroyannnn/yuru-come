@@ -55,7 +55,7 @@ moon build --target native
 | `JEV_URL` | `http://127.0.0.1:8000` | Jev 互換 API のベース URL（`POST /v1/systemone`） |
 | `JEV_API_KEY` | `local` | Bearer トークン |
 | `JEV_MODEL` | `jev-latest` | リクエストに載せるモデル名 |
-| `YOUTUBE_API_KEY` | なし | `--source youtube` のときだけ必要 |
+| `YOUTUBE_API_KEY` | なし | 任意。あれば `--source youtube` が Data API v3 を使う。無ければキー無しの経路で読む |
 
 本家 Jev は Vercel AI Gateway 経由で使えます。
 
@@ -98,7 +98,13 @@ moon run --target native cmd/yuru-come -- --source twitch --twitch <channel> --p
 moon run --target native cmd/yuru-come -- --source twitch --twitch <channel> --context "配信の話題"
 ```
 
-**YouTube Live**: Data API v3 を API キーでポーリングします（公開ライブなら OAuth 不要）。`<videoId>` は `watch?v=` の後ろです。
+**YouTube Live**: 既定ではキー無しで読みます。ブラウザと同じ経路（`youtube.com/live_chat?v=…` のページから継続トークンを取り、`youtubei/v1/live_chat/get_live_chat` を叩く）で、マルチコメントビューアやわんコメと同じ方式です。クォータもありませんが、非公式なので YouTube 側の変更で壊れることがあります。`<videoId>` は `watch?v=` の後ろです。
+
+```bash
+moon run --target native cmd/yuru-come -- --source youtube --youtube <videoId>
+```
+
+`YOUTUBE_API_KEY` があれば Data API v3（公開ライブなら OAuth 不要）でポーリングします。こちらは公式ですがクォータを消費します。
 
 ```bash
 export YOUTUBE_API_KEY=<API キー>
@@ -294,7 +300,7 @@ open-jev の 1 倍速では判定待ちは溜まらず、拾い上げはコメ�
 
 yuru-come はコメントの読み上げも、OBS へのコメント表示も、複数サイトの一覧もしません。それらは今お使いのコメントビューワーに任せて、yuru-come はサブモニタの隅に置いてください。
 
-- **どちらも同じ配信に別々に接続します。** Twitch は匿名の読み取り専用接続、YouTube は API キーでのポーリングなので、配信者のアカウントにも既存のビューワーにも影響しません。YouTube は Data API のクォータを消費します。
+- **どちらも同じ配信に別々に接続します。** Twitch は匿名の読み取り専用接続、YouTube はブラウザと同じ経路（またはキーがあれば Data API）なので、配信者のアカウントにも既存のビューワーにも影響しません。
 - **見るのは左の枠だけで構いません。** 流れを追うのは既存のビューワーか読み上げに任せ、左の枠に何か出たら拾う、という使い方です。
 - **荒らしの対処はしません。** 折りたたんで目に入りにくくするだけです。BAN やタイムアウトは各サイトのモデレーション機能を使ってください。
 - わんコメなどのログや WebSocket 出力を `参加者ID<TAB>発言` に変換できれば、`--source stdin` にパイプして取り込めます。
@@ -323,7 +329,7 @@ test "正規化して束ねる" {
 
 | パッケージ | ターゲット | 役割 |
 | --- | --- | --- |
-| `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、エンジン、各 Source のパーサ |
+| `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、エンジン、各 Source のパーサ（Twitch IRC、YouTube の innertube と Data API、stdin、replay） |
 | `runtime` | native | Source の並行実行と、判定ワーカー（タイムアウトつき） |
 | `jev` | native | Jev 互換 API の HTTP クライアント |
 | `adapters/*` | native | stdin / twitch / youtube / replay の Source、terminal / web の Sink |
@@ -337,7 +343,8 @@ moon test --target all
 ## 未実装・既知の制限
 
 - 「いまの空気」を 30 秒ごとに一文にする LLM 要約は未実装です。
-- YouTube Live での実機確認は未実施です。
+- YouTube の Data API 経路（`YOUTUBE_API_KEY` あり）は実機で未確認です。キー無しの経路は 24 時間配信のニュースチャンネルで確認しています。
+- YouTube のキー無し経路は、チャットが無効・視聴者限定の配信では `ChatUnavailable` で止まります。配信が終わる（継続トークンが返らなくなる）と Source が終わります。
 - ゲーム内の出来事を嘆くコメントが trouble と判定され、priority が下限を超えると最上位に出ます（上の「流速に追いつけるか」を参照）。
 - 正規化の連続圧縮は「ここ」→「こ」のような普通の語も縮めます。束ねのキーにしか使わないので表示は変わりませんが、まれに別のコメントが同じ束になります。
 - 流量制御は短いコメントから落とすので、「音出てない」のような短くて大事な報告が、滞留中は未判定のまま流れることがあります。
