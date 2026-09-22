@@ -1,0 +1,12 @@
+[
+  {
+    "label": "配信で使っているマイク",
+    "url": "https://example.com/mic",
+    "keywords": ["マイク", "mic", "音質いい", "音質よ"]
+  },
+  {
+    "label": "今日やっているゲーム",
+    "url": "https://example.com/game",
+    "keywords": ["どこで買え", "セール", "何のゲーム"]
+  }
+]

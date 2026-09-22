@@ -128,3 +128,9 @@ test "正解データの書き先は変えられ、空にすると書かない" 
   assert_eq(parse(["--labels", "out/l.jsonl"]).labels_path, "out/l.jsonl")
   assert_eq(parse(["--labels", ""]).labels_path, "")
 }
+
+///|
+test "--promos で商品の一覧ファイルを指定できる（既定は無し）" {
+  assert_eq(parse([]).promos_path, None)
+  assert_eq(parse(["--promos", "promos.json"]).promos_path, Some("promos.json"))
+}

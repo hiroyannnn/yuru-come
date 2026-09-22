@@ -42,6 +42,8 @@ pub fn parse_live_chat_page(Json) -> @lib.LiveChatPage raise @lib.YouTubeError
 
 pub fn parse_live_chat_page_html(String) -> @lib.InnertubeConfig raise @lib.YouTubeError
 
+pub fn parse_promos(Json) -> Array[@lib.Promo] raise @lib.PromoError
+
 pub fn parse_replay_line(String) -> (Int64, @lib.Comment)?
 
 pub fn parse_response(Json) -> @lib.Triage raise @lib.ResponseError
@@ -55,6 +57,8 @@ pub fn participant_id(String, String) -> String
 pub fn pong_line(String) -> String
 
 pub let priority_levels : Array[String]
+
+pub fn qr_svg(String) -> String?
 
 pub fn reconnect_delay_ms(Int, base_ms? : Int, max_ms? : Int) -> Int
 
@@ -122,6 +126,16 @@ pub using @lib {type PickupConfig}
 pub using @lib {type PickupList}
 
 pub using @lib {type PickupView}
+
+pub using @lib {type Promo}
+
+pub using @lib {type PromoBoard}
+
+pub using @lib {type PromoConfig}
+
+pub using @lib {type PromoError}
+
+pub using @lib {type PromoView}
 
 pub using @lib {type ReactionCount}
 

@@ -2,6 +2,7 @@ import {
   "hiroyannnn/yuru-come/lib",
   "hiroyannnn/yuru-come/runtime",
   "moonbitlang/core/json",
+  "moonbitlang/core/encoding/utf8",
   "moonbitlang/async",
   "moonbitlang/async/fs",
   "moonbitlang/async/http",

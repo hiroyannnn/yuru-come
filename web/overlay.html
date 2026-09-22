@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>yuru-come overlay</title>
+  <style>
+    /* OBS のブラウザソース用。背景は透過。話題になった商品の QR とリンクだけを出す */
+    html, body { margin: 0; background: transparent; }
+    body { font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif; color: #fff; }
+    .promos { position: fixed; right: 24px; bottom: 24px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+    .promo {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(20, 22, 26, .88); border: 2px solid #ffd166; border-radius: 12px; padding: 12px 16px 12px 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+      animation: pop .3s ease-out;
+    }
+    .promo img { width: 120px; height: 120px; background: #fff; border-radius: 6px; }
+    .promo .label { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+    .promo .url { font-size: 15px; color: #ffd166; margin: 0; word-break: break-all; max-width: 32em; }
+    .promo .trigger { font-size: 13px; color: #b6bcc6; margin: 6px 0 0; max-width: 32em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @keyframes pop { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="promos" id="promos"></div>
+  <script>
+    "use strict";
+    const container = document.getElementById("promos");
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+    function render(promos) {
+      const existing = new Map([...container.children].map((node) => [node.dataset.key, node]));
+      const nodes = promos.map((promo) => {
+        const key = `${promo.url}@${promo.shown_at}`;
+        let node = existing.get(key);
+        if (!node) {
+          node = el("div", "promo");
+          node.dataset.key = key;
+          const img = el("img");
+          img.alt = "QR";
+          img.src = `/api/qr.svg?text=${encodeURIComponent(promo.url)}`;
+          const text = el("div");
+          text.append(el("p", "label", promo.label), el("p", "url", promo.url), el("p", "trigger", `「${promo.trigger}」`));
+          node.append(img, text);
+        }
+        return node;
+      });
+      container.replaceChildren(...nodes);
+    }
+    let refreshing = false;
+    async function refresh() {
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        const response = await fetch("/api/state", { cache: "no-store" });
+        if (response.ok) render((await response.json()).promos || []);
+      } catch (_) {
+      } finally {
+        refreshing = false;
+      }
+    }
+    refresh();
+    setInterval(refresh, 1000);
+  </script>
+</body>
+</html>
