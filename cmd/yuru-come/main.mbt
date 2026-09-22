@@ -105,9 +105,17 @@ async fn start(options : CliOptions) -> Unit {
     }
   }
   let client = @jev.JevClient::from_env()
+  let llm = @llm.OpenAiClient::from_env()
   @async.with_task_group(group => {
     if web is Some(web) {
       group.spawn_bg(() => web.serve())
+    }
+    // OPENAI_API_KEY があるときだけ、30 秒ごとに「いまの空気」を一文にする
+    if llm is Some(llm) {
+      @runtime.log(
+        "summary: \{llm.model()} で 30 秒ごとに空気を要約します",
+      )
+      group.spawn_bg(() => @runtime.summarize_loop(engine, llm.summarize_fn()))
     }
     @runtime.run(engine, client.judge_fn(), sources, workers=options.workers)
     let stats = engine.state(@async.now()).stats

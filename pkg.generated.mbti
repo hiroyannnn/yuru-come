@@ -6,7 +6,11 @@ import {
 }
 
 // Values
+pub fn build_chat_request(String, Array[@lib.Message], max_completion_tokens? : Int, reasoning_effort? : String?) -> Json
+
 pub fn build_request(String, context? : String, model? : String) -> Json
+
+pub fn clean_summary(String) -> String
 
 pub fn compress_runs(String) -> String
 
@@ -20,9 +24,13 @@ pub fn innertube_live_chat_url(@lib.InnertubeConfig) -> String
 
 pub let jev_kinds : Array[@lib.Kind]
 
+pub fn next_reasoning_effort(String?) -> String?
+
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]
+
+pub fn parse_chat_response(Int, String) -> String raise @lib.OpenAiError
 
 pub fn parse_get_live_chat(Json) -> @lib.LiveChatPage raise @lib.YouTubeError
 
@@ -51,6 +59,12 @@ pub let priority_levels : Array[String]
 pub fn reconnect_delay_ms(Int, base_ms? : Int, max_ms? : Int) -> Int
 
 pub fn replay_delay_ms(Int64, Int64, Double) -> Int
+
+pub fn summary_needed(@lib.EngineState, last_entry_id~ : Int) -> Bool
+
+pub fn summary_prompt(@lib.EngineState, recent_limit? : Int) -> @lib.SummaryPrompt
+
+pub fn template_summary(@lib.EngineState) -> String
 
 pub fn twitch_login_lines(String, String) -> Array[String]
 
@@ -93,9 +107,13 @@ pub using @lib {type Kind}
 
 pub using @lib {type LiveChatPage}
 
+pub using @lib {type Message}
+
 pub using @lib {type Mood}
 
 pub using @lib {type MoodSnapshot}
+
+pub using @lib {type OpenAiError}
 
 pub using @lib {type Pending}
 
@@ -110,6 +128,12 @@ pub using @lib {type ReactionCount}
 pub using @lib {type ReactionRules}
 
 pub using @lib {type ResponseError}
+
+pub using @lib {type Role}
+
+pub using @lib {type Summary}
+
+pub using @lib {type SummaryPrompt}
 
 pub using @lib {type Token}
 

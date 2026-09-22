@@ -119,6 +119,8 @@ pub(all) struct EngineState {
   /// 新しい順
   flow : Array[FlowEntry]
   stats : EngineStats
+  /// いまの空気の一文
+  summary : Summary
 } derive(Debug, ToJson)
 
 ///|
@@ -186,6 +188,8 @@ pub struct Engine {
   mut dropped : Int
   mut in_flight : Int
   mut judge_delay_ms : Int64
+  /// LLM が書いた最新の一文と、その時刻
+  mut llm_summary : (String, Int64)?
 }
 
 ///|
@@ -210,6 +214,7 @@ pub fn Engine::new(config? : EngineConfig = EngineConfig::new()) -> Engine {
     dropped: 0,
     in_flight: 0,
     judge_delay_ms: 0,
+    llm_summary: None,
   }
 }
 
@@ -453,6 +458,12 @@ fn Engine::forget_stale_verdicts(self : Engine, now : Int64) -> Unit {
 }
 
 ///|
+/// LLM が書いた「いまの空気」の一文を覚える。
+pub fn Engine::set_summary(self : Engine, text : String, now : Int64) -> Unit {
+  self.llm_summary = Some((text, now))
+}
+
+///|
 /// 拾い上げを既読にする。
 pub fn Engine::dismiss(self : Engine, pickup_id : Int) -> Bool {
   self.pickup.dismiss(pickup_id)
@@ -466,7 +477,7 @@ pub fn Engine::state(
   flow_limit? : Int = 100,
 ) -> EngineState {
   let newest_first = self.flow.rev()
-  {
+  let state : EngineState = {
     now,
     context: self.config.context,
     pickups: self.pickup.view(now),
@@ -491,5 +502,13 @@ pub fn Engine::state(
       in_flight: self.in_flight,
       judge_delay_ms: self.judge_delay_ms,
     },
+    summary: { text: "", source: "template", at: now, },
   }
+  // LLM の一文が新しければそれを、無いか古ければテンプレートの一文を載せる
+  let summary : Summary = match self.llm_summary {
+    Some((text, at)) if now - at < SUMMARY_STALE_MS =>
+      { text, source: "llm", at, }
+    _ => { text: template_summary(state), source: "template", at: now, }
+  }
+  { ..state, summary, }
 }

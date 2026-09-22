@@ -56,6 +56,8 @@ moon build --target native
 | `JEV_API_KEY` | `local` | Bearer トークン |
 | `JEV_MODEL` | `jev-latest` | リクエストに載せるモデル名 |
 | `YOUTUBE_API_KEY` | なし | 任意。あれば `--source youtube` が Data API v3 を使う。無ければキー無しの経路で読む |
+| `OPENAI_API_KEY` | なし | 任意。あれば 30 秒ごとに「いまの空気」を LLM が一文にする（[いまの空気の一文](#いまの空気の一文)） |
+| `OPENAI_MODEL` | `gpt-5.6-luna` | 要約に使うモデル |
 
 本家 Jev は Vercel AI Gateway 経由で使えます。
 
@@ -151,8 +153,17 @@ node tools/tiktok-bridge/bridge.mjs <TikTok のユーザー名> \
 ## ダッシュボードの見方
 
 - **左「拾うべきコメント」**: 種類のバッジ、拾う度（priority）、投稿者とプラットフォーム（Twitch はチャンネル名も）。クリックで既読にして消します。5 分たつと薄くなり、10 分で消えます。配信トラブルの報告は赤い枠で最上位に固定します。並びは priority の高い順、同じなら新しい順です。同じコメントが重ねて来たら「同じコメント ×3」と出ます。
-- **中「いまの空気」**: 直近 30 秒の反応の束を、件数が多いほど大きく出します（「草 ×48 20人」）。その下に流速（件/秒）と参加者数、直近 5 分の種類の分布、Jev の判定待ち（滞留）と直近の判定の遅れ、Jev を省いた割合、間引いた件数が出ます。
+- **中「いまの空気」**: いちばん上に一文（[いまの空気の一文](#いまの空気の一文)）。その下に直近 30 秒の反応の束を、件数が多いほど大きく出します（「草 ×48 20人」）。その下に流速（件/秒）と参加者数、直近 5 分の種類の分布、Jev の判定待ち（滞留）と直近の判定の遅れ、Jev を省いた割合、間引いた件数が出ます。
 - **右「全部の流れ」**: 従来のビューワーに相当する全コメントです。反応は薄く、荒らしと判定されたコメントは折りたたみ、拾い上げに入ったコメントは色つきで出ます。判定待ちは白抜きの丸、間引いたコメントは「未判定（間引き）」と出ます。
+
+## いまの空気の一文
+
+中央の枠のいちばん上に、いまチャットで起きていることを一文で出します。
+
+- `OPENAI_API_KEY` が無いとき（既定）: 数字を文に並べたテンプレートです。「「草」×24、「888」×28 が続いています。質問 3、初見 2。30 秒で 61 件・40 人。」
+- `OPENAI_API_KEY` があるとき: 30 秒ごとに、配信の文脈・束・種類の分布・直近の中身のあるコメント 12 件を OpenAI（既定 `gpt-5.6-luna`）に渡して、40 字以内の一文を書かせます。「石油精製のつなぎ間違いへの指摘が続いていて、初見さんが 3 人来ています。」のように、項目をまたいだ解釈が入ります。前回から新しいコメントが無ければ呼びません。`gpt-5.6-luna` で 1 回 1.2〜1.6 秒、1 時間あたり最大 120 回、入力 500 トークン前後なので、料金はごくわずかです（2026-09-22 時点で入力 $0.20 / 出力 $1.20 per 1M トークン）。失敗したときと 2 分たっても更新されないときはテンプレートに戻ります。
+
+Jev は文章を書けない（型付きの答えしか返さない）ので、ここだけが普通の LLM の仕事です。**有効にすると視聴者のコメントが OpenAI に送られます。** OpenAI のデータ共有（学習に提供する代わりに無料枠が付く設定）を使っている場合は、コメントが学習データに入ります。
 
 ## kind の一覧
 
@@ -332,6 +343,7 @@ test "正規化して束ねる" {
 | `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、エンジン、各 Source のパーサ（Twitch IRC、YouTube の innertube と Data API、stdin、replay） |
 | `runtime` | native | Source の並行実行と、判定ワーカー（タイムアウトつき） |
 | `jev` | native | Jev 互換 API の HTTP クライアント |
+| `llm` | native | OpenAI chat/completions のクライアント（空気の一文用） |
 | `adapters/*` | native | stdin / twitch / youtube / replay の Source、terminal / web の Sink |
 | `cmd/yuru-come` | native | CLI |
 | `cmd/eval` | native | 評価コマンド |
@@ -342,7 +354,6 @@ moon test --target all
 
 ## 未実装・既知の制限
 
-- 「いまの空気」を 30 秒ごとに一文にする LLM 要約は未実装です。
 - YouTube の Data API 経路（`YOUTUBE_API_KEY` あり）は実機で未確認です。キー無しの経路は 24 時間配信のニュースチャンネルで確認しています。
 - YouTube のキー無し経路は、チャットが無効・視聴者限定の配信では `ChatUnavailable` で止まります。配信が終わる（継続トークンが返らなくなる）と Source が終わります。
 - ゲーム内の出来事を嘆くコメントが trouble と判定され、priority が下限を超えると最上位に出ます（上の「流速に追いつけるか」を参照）。
@@ -354,6 +365,7 @@ moon test --target all
 ## Acknowledgments
 
 - [hiroyannnn/yuru-poll](https://github.com/hiroyannnn/yuru-poll)（Apache-2.0）: Twitch / YouTube / stdin のパーサとアダプタ、Jev クライアント、runtime、web サーバの骨格、CLI の解釈をコピーして直しています。
+- [hiroyannnn/plutchik-chat](https://github.com/hiroyannnn/plutchik-chat)（Apache-2.0）: OpenAI chat/completions のリクエスト組み立て・レスポンス解釈・クライアントをコピーしています。
 - [hiroyannnn/strsim](https://github.com/hiroyannnn/strsim)（Apache-2.0、strsim-rs 由来のアルゴリズムは MIT）: 短いコメントの類似度。
 - [moonbitlang/async](https://github.com/moonbitlang/async)（Apache-2.0）: イベントループ、ソケット、TLS、HTTP。
 - [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector): `tools/tiktok-bridge` が利用者の `npm install` で取得します（2.4.0、MIT）。このリポジトリにコードは含みません。

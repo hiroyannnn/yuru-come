@@ -6,7 +6,13 @@ import {
 }
 
 // Values
+pub const DEFAULT_MAX_COMPLETION_TOKENS : Int = 1024
+
+pub const DEFAULT_OPENAI_MODEL : String = "gpt-5.6-luna"
+
 pub const DEFAULT_POLLING_INTERVAL_MS : Int = 5000
+
+pub const DEFAULT_REASONING_EFFORT : String = "minimal"
 
 pub const JEV_MODEL : String = "jev-latest"
 
@@ -22,7 +28,17 @@ pub const PRIORITY_INSTRUCTIONS : String = "配信者がこのコメントを読
 
 pub const PRIORITY_QUESTION_KEY : String = "priority"
 
+pub const SUMMARY_MAX_CHARS : Int = 80
+
+pub const SUMMARY_STALE_MS : Int64 = 120_000
+
+pub const SUMMARY_SYSTEM_PROMPT : String = "あなたはライブ配信のチャット欄を横で見ている助手です。渡された情報だけを使って、配信者がいまチャットで起きていることを、日本語の短い一文（40 字以内）で伝えてください。件数や人数などの数字は画面に出ているので繰り返さない。何が話題か、拾うべきものがあるかを優先する。コメントに無いことは書かない。前置きや引用符は付けず、文だけを返す。"
+
+pub fn build_chat_request(String, Array[Message], max_completion_tokens? : Int, reasoning_effort? : String?) -> Json
+
 pub fn build_request(String, context? : String, model? : String) -> Json
+
+pub fn clean_summary(String) -> String
 
 pub fn compress_runs(String) -> String
 
@@ -38,9 +54,13 @@ pub let jev_kinds : Array[Kind]
 
 pub fn live_chat_messages_url(String, String, String?) -> String
 
+pub fn next_reasoning_effort(String?) -> String?
+
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[Token]
+
+pub fn parse_chat_response(Int, String) -> String raise OpenAiError
 
 pub fn parse_get_live_chat(Json) -> LiveChatPage raise YouTubeError
 
@@ -72,6 +92,12 @@ pub fn render_pickup_line(FlowEntry) -> String?
 
 pub fn replay_delay_ms(Int64, Int64, Double) -> Int
 
+pub fn summary_needed(EngineState, last_entry_id~ : Int) -> Bool
+
+pub fn summary_prompt(EngineState, recent_limit? : Int) -> SummaryPrompt
+
+pub fn template_summary(EngineState) -> String
+
 pub fn twitch_login_lines(String, String) -> Array[String]
 
 pub fn unify_width(String) -> String
@@ -79,6 +105,17 @@ pub fn unify_width(String) -> String
 pub fn videos_list_url(String, String) -> String
 
 // Errors
+pub(all) suberror OpenAiError {
+  Unauthorized(String)
+  RateLimited(String)
+  ServerError(code~ : Int, message~ : String)
+  BadRequest(code~ : Int, message~ : String)
+  InvalidJson(String)
+  MissingContent(String)
+} derive(Eq, @debug.Debug)
+pub fn OpenAiError::is_unsupported_parameter(Self, String) -> Bool
+pub impl Show for OpenAiError
+
 pub(all) suberror ResponseError {
   InvalidJson(String)
   MissingField(String)
@@ -171,6 +208,7 @@ pub struct Engine {
   mut dropped : Int
   mut in_flight : Int
   mut judge_delay_ms : Int64
+  mut llm_summary : (String, Int64)?
 }
 pub fn Engine::add_sink(Self, &Sink) -> Unit
 pub fn Engine::complete(Self, Pending, Triage?, Int64) -> Unit
@@ -178,6 +216,7 @@ pub fn Engine::context(Self) -> String
 pub fn Engine::dismiss(Self, Int) -> Bool
 pub fn Engine::ingest(Self, Comment, Int64) -> Unit
 pub fn Engine::new(config? : EngineConfig) -> Self
+pub fn Engine::set_summary(Self, String, Int64) -> Unit
 pub fn Engine::state(Self, Int64, flow_limit? : Int) -> EngineState
 pub fn Engine::take_next(Self) -> Pending?
 
@@ -200,6 +239,7 @@ pub(all) struct EngineState {
   mood_long : MoodSnapshot
   flow : Array[FlowEntry]
   stats : EngineStats
+  summary : Summary
 } derive(ToJson, @debug.Debug)
 
 pub(all) struct EngineStats {
@@ -271,6 +311,12 @@ pub(all) struct LiveChatPage {
   next_page_token : String?
   polling_interval_ms : Int
 } derive(@debug.Debug)
+
+pub(all) struct Message {
+  role : Role
+  content : String
+} derive(Eq, @debug.Debug)
+pub impl ToJson for Message
 
 pub struct Mood {
   retention_ms : Int64
@@ -349,6 +395,22 @@ pub struct ReactionRules {
 }
 pub fn ReactionRules::is_reaction(Self, String, emotes? : Array[String]) -> Bool
 pub fn ReactionRules::new(extra_words? : Array[String]) -> Self
+
+pub(all) enum Role {
+  System
+  User
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Summary {
+  text : String
+  source : String
+  at : Int64
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct SummaryPrompt {
+  system : String
+  user : String
+} derive(Eq, @debug.Debug)
 
 pub(all) enum Token {
   Text(String)

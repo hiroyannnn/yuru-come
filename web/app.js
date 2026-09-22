@@ -127,6 +127,13 @@ function renderBundles(state) {
   }));
 }
 
+function renderSummary(state) {
+  const summary = state.summary || { text: "", source: "template" };
+  $("summary-text").textContent = summary.text;
+  $("summary").classList.toggle("template", summary.source !== "llm");
+  $("summary-source").textContent = summary.source === "llm" ? `（LLM、${ageText(state.now, summary.at)}）` : "";
+}
+
 function renderMood(state) {
   $("rate").textContent = state.mood_short.rate_per_sec.toFixed(1);
   $("participants").textContent = String(state.mood_short.participants);
@@ -226,6 +233,7 @@ function render(state) {
   forgetGone(state);
   $("context").textContent = state.context ? `文脈: ${state.context}` : "";
   renderPickups(state);
+  renderSummary(state);
   renderBundles(state);
   renderMood(state);
   renderStats(state);

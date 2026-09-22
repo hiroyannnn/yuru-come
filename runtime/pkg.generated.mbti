@@ -10,6 +10,8 @@ pub async fn log(String) -> Unit
 
 pub async fn run(@lib.Engine, async (String, @lib.Comment) -> @lib.Triage, Array[&@lib.Source], workers? : Int, judge_timeout_ms? : Int) -> Unit
 
+pub async fn summarize_loop(@lib.Engine, async (String, String) -> String, interval_ms? : Int) -> Unit
+
 // Errors
 
 // Types and methods
