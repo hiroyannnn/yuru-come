@@ -45,7 +45,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      MOON_TOKEN: ${{ secrets.MOON_TOKEN }}
+      # トークン本体は publish の step にだけ渡す。ここでは有無だけを見る
+      HAS_MOON_TOKEN: ${{ secrets.MOON_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install MoonBit
@@ -57,7 +58,9 @@ jobs:
       - name: Test
         run: moon test --target all
       - name: Publish to mooncakes.io
-        if: ${{ env.MOON_TOKEN != '' }}
+        if: ${{ env.HAS_MOON_TOKEN == 'true' }}
+        env:
+          MOON_TOKEN: ${{ secrets.MOON_TOKEN }}
         run: |
           mkdir -p ~/.moon
           echo "{\"token\":\"${MOON_TOKEN}\",\"username\":\"hiroyannnn\"}" > ~/.moon/credentials.json
