@@ -129,7 +129,7 @@ printf 'alice\tこれ何のゲームですか？\nbob\t草\n' | moon run --targe
 moon run --target native cmd/yuru-come -- --source replay --replay samples/wave.tsv --speed 10
 ```
 
-**TikTok（非公式・不安定）**: TikTok には公式のコメント取得 API がありません。`tools/tiktok-bridge/` は、Node の非公式ライブラリ [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector) でコメントを受けて標準出力に流すだけの小さなブリッジで、stdin Source にパイプして使います。TikTok 側の仕様変更で予告なく動かなくなります。このブリッジは実際の TikTok LIVE では未検証です。ライブラリは MIT で配布された最後の版 2.4.0 に固定しています（2.4.1 以降は AGPL-3.0-only）。
+**TikTok（非公式・不安定）**: TikTok には公式のコメント取得 API がありません。`tools/tiktok-bridge/` は、Node の非公式ライブラリ [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector) でコメントを受けて標準出力に流すだけの小さなブリッジで、stdin Source にパイプして使います。TikTok 側の仕様変更で予告なく動かなくなります（2026-09-22 時点では、配信中のゲーム配信で 2 分半に 31 件を受信できました）。ライブラリは MIT で配布された最後の版 2.4.0 に固定しています（2.4.1 以降は AGPL-3.0-only）。配信中のアカウント名は、ブラウザで `tiktok.com/live` を開くと分かります。
 
 ```bash
 (cd tools/tiktok-bridge && npm install)
