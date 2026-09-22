@@ -4,6 +4,7 @@ fn entry(
   status : @lib.JudgeStatus,
   pickup_id : Int?,
   priority? : Double,
+  channel? : String = "",
 ) -> @lib.FlowEntry {
   {
     id: 1,
@@ -11,6 +12,7 @@ fn entry(
       "twitch:1",
       "これ何のゲーム？",
       author="Alice",
+      channel~,
     ),
     kind,
     priority,
@@ -24,6 +26,16 @@ test "拾い上げに入ったコメントを 1 行にする（種類・priority
   assert_eq(
     @lib.render_pickup_line(entry(Question, Judged, Some(3), priority=1.25)),
     Some("[質問 1.3] twitch/Alice: これ何のゲーム？"),
+  )
+}
+
+///|
+test "チャンネルが分かるコメントは、プラットフォームの後ろにチャンネル名を出す" {
+  assert_eq(
+    @lib.render_pickup_line(
+      entry(Question, Judged, Some(3), priority=1.25, channel="somechannel"),
+    ),
+    Some("[質問 1.3] twitch #somechannel/Alice: これ何のゲーム？"),
   )
 }
 

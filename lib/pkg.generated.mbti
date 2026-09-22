@@ -137,8 +137,9 @@ pub(all) struct Comment {
   text : String
   at : Int64
   emotes : Array[String]
+  channel : String
 } derive(Eq, ToJson, @debug.Debug)
-pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String]) -> Self
+pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String], channel? : String) -> Self
 pub fn Comment::platform(Self) -> String
 
 pub struct Engine {

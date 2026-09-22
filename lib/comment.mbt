@@ -11,6 +11,8 @@ pub(all) struct Comment {
   at : Int64
   /// 本文に含まれるスタンプ名（Twitch のエモート名など）。正規化でトークンとして保持する
   emotes : Array[String]
+  /// コメントが書かれたチャンネル（Twitch のチャンネル名、YouTube の動画 ID）。不明なら空
+  channel : String
 } derive(Debug, Eq, ToJson)
 
 ///|
@@ -20,8 +22,9 @@ pub fn Comment::new(
   author? : String = "",
   at? : Int64 = 0,
   emotes? : Array[String] = [],
+  channel? : String = "",
 ) -> Comment {
-  { participant_id, author, text, at, emotes, }
+  { participant_id, author, text, at, emotes, channel, }
 }
 
 ///|

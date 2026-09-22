@@ -11,8 +11,13 @@ pub fn render_pickup_line(entry : FlowEntry) -> String? {
   }
   let mark = if entry.kind is Trouble { "!! " } else { "" }
   let comment = entry.comment
+  let place = if comment.channel.is_empty() {
+    comment.platform()
+  } else {
+    "\{comment.platform()} #\{comment.channel}"
+  }
   Some(
-    "\{mark}[\{entry.kind.label()}\{priority}] \{comment.platform()}/\{comment.author}: \{comment.text}",
+    "\{mark}[\{entry.kind.label()}\{priority}] \{place}/\{comment.author}: \{comment.text}",
   )
 }
 
