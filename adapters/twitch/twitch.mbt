@@ -10,6 +10,7 @@ pub const TWITCH_IRC_PLAIN_PORT : Int = 6667
 ///|
 /// Twitch チャットを匿名ユーザー（`justinfan<数字>`、PASS 不要）で読み取り専用購読する Source。
 /// TLS（6697）を優先し、失敗したら平文（6667）にフォールバックする。
+/// 接続が切れたら待ち時間を倍にしながら再接続し続ける（1 秒から最大 60 秒。60 秒以上もった接続のあとは 1 秒に戻る）。
 pub struct TwitchSource {
   channel : String
   nick : String
@@ -26,6 +27,30 @@ pub fn TwitchSource::new(channel : String, nick? : String) -> TwitchSource {
 
 ///|
 pub impl @lib.Source for TwitchSource with fn run(self, submit) {
+  let mut failures = 0
+  while true {
+    let started = @async.now()
+    self.connect_once(submit) catch {
+      err => @runtime.log("twitch: #\{self.channel} の接続に失敗: \{err}")
+    }
+    if @lib.connection_was_healthy(connected_ms=@async.now() - started) {
+      failures = 0
+    }
+    let delay = @lib.reconnect_delay_ms(failures)
+    failures += 1
+    @runtime.log(
+      "twitch: #\{self.channel} に \{delay}ms 後に再接続します",
+    )
+    @async.sleep(delay)
+  }
+}
+
+///|
+/// 1 回つないで、切れるまで読む。
+async fn TwitchSource::connect_once(
+  self : TwitchSource,
+  submit : async (@lib.Comment) -> Unit,
+) -> Unit {
   let tcp = @socket.Tcp::connect_to_host(
     TWITCH_IRC_HOST,
     port=TWITCH_IRC_TLS_PORT,
@@ -68,5 +93,5 @@ async fn[C : @io.Reader + @io.Writer] TwitchSource::chat_loop(
       Other(_) => ()
     }
   }
-  @runtime.log("twitch: 接続が切れました")
+  @runtime.log("twitch: #\{self.channel} の接続が切れました")
 }

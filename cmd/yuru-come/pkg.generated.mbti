@@ -29,7 +29,7 @@ pub(all) struct CliOptions {
   port : Int
   host : String
   context : String
-  twitch_channel : String?
+  twitch_channels : Array[String]
   youtube_video_id : String?
   replay_path : String?
   speed : Double

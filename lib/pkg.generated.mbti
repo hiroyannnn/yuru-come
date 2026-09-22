@@ -26,6 +26,8 @@ pub fn build_request(String, context? : String, model? : String) -> Json
 
 pub fn compress_runs(String) -> String
 
+pub fn connection_was_healthy(connected_ms~ : Int64, healthy_ms? : Int64) -> Bool
+
 pub let default_reaction_words : Array[String]
 
 pub let jev_kinds : Array[Kind]
@@ -55,6 +57,8 @@ pub fn participant_id(String, String) -> String
 pub fn pong_line(String) -> String
 
 pub let priority_levels : Array[String]
+
+pub fn reconnect_delay_ms(Int, base_ms? : Int, max_ms? : Int) -> Int
 
 pub fn render_pickup_line(FlowEntry) -> String?
 

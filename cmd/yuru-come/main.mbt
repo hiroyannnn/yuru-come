@@ -54,13 +54,15 @@ async fn start(options : CliOptions) -> Unit {
         )
       }
       "twitch" => {
-        guard options.twitch_channel is Some(channel) else {
+        guard !options.twitch_channels.is_empty() else {
           println(
             "--source twitch には --twitch <channel> が必要です\n\n\{usage}",
           )
           return
         }
-        sources.push(@twitch_source.TwitchSource::new(channel))
+        for channel in options.twitch_channels {
+          sources.push(@twitch_source.TwitchSource::new(channel))
+        }
       }
       "youtube" => {
         guard options.youtube_video_id is Some(video_id) else {
