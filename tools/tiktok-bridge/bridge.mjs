@@ -20,9 +20,10 @@ const connection = new TikTokLiveConnection(uniqueId, {});
 // TAB と改行は区切りに使うので、空白に置き換える
 const clean = (text) => String(text ?? "").replace(/[\t\r\n]+/g, " ").trim();
 
+// 2.4.0 は本文が `content`、ID が `user.displayId`。それより前の版は `comment` と `uniqueId`。
 connection.on(WebcastEvent.CHAT, (data) => {
-  const id = clean(data.user?.uniqueId || data.uniqueId || "anon");
-  const comment = clean(data.comment);
+  const id = clean(data.user?.displayId || data.user?.uniqueId || data.uniqueId || "anon");
+  const comment = clean(data.content ?? data.comment);
   if (comment) process.stdout.write(`${id}\t${comment}\n`);
 });
 
