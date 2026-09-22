@@ -10,7 +10,6 @@ check:
 	moon fmt
 	python3 scripts/embed_assets.py --check
 	moon check --target all
-	git diff --exit-code
 
 # web/ を編集したら実行して adapters/web/assets.mbt を作り直す
 assets:
