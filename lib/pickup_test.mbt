@@ -22,11 +22,14 @@ test "拾うべき種類でも、priority が下限に届かない掛け合い�
 }
 
 ///|
-test "trouble は priority が低くても必ず拾う" {
+test "trouble も priority が下限以上のときだけ拾う（ゲーム内の嘆きを最上位に出さない）" {
   let list = @lib.PickupList::new()
+  assert_eq(list.offer(say("もうだめだあ"), Trouble, 0.38, 0), None)
   assert_true(
-    list.offer(say("音が出てない"), Trouble, 0.05, 0) is Some(_),
+    list.offer(say("マイクが遠い気がする"), Trouble, 0.6, 0)
+    is Some(_),
   )
+  assert_eq(list.view(0).map(item => item.pinned), [true])
 }
 
 ///|
