@@ -91,6 +91,7 @@ moon run --target native cmd/yuru-come -- --source twitch --twitch <channel> --p
 | `--reaction-word <word>` | なし | 早期判定の辞書に足す語。複数指定可 |
 | `--priority-threshold <0..2>` | `1.5` | この priority 以上なら種類によらず拾う。2 より大きくすると種類だけで拾う |
 | `--labels <file.jsonl>` | `labels.jsonl` | 気になるコメントを配信者がどうしたかの記録先（[正解データ](#正解データ)）。空文字で書かない |
+| `--promos <file.json>` | なし | 話題になったらオーバーレイに QR とリンクを出す商品の一覧（[商品・URL の自動表示](#商品url-の自動表示)） |
 | `--pickup-floor <0..2>` | `0.6` | トラブル・質問・リクエスト・指摘・初見を拾うのに求める priority の下限。0 にすると種類だけで拾う |
 
 ### Source
@@ -142,7 +143,7 @@ node tools/tiktok-bridge/bridge.mjs <TikTok のユーザー名> \
 
 ### Sink
 
-**web**（既定）: 下の 3 枠のダッシュボードです。`GET /api/state` が全状態の JSON、`POST /api/dismiss`（`{"id": <項目 ID>}`）が拾い上げの既読です。静的ファイルは `web/` にある素の HTML / CSS / JS で、外部ライブラリは使っていません。
+**web**（既定）: 下の 3 枠のダッシュボードです。`GET /api/state` が全状態の JSON、`POST /api/dismiss`（`{"id": <項目 ID>, "action": "picked"|"skipped"}`）が気になるコメントの既読です。`GET /overlay` は OBS のブラウザソース用の透過ページで、[商品・URL の自動表示](#商品url-の自動表示)に使います。静的ファイルは `web/` にある素の HTML / CSS / JS で、外部ライブラリは使っていません。
 
 **terminal**: 気になるコメント（拾い上げ）だけを 1 行ずつ出します。デバッグと最小構成用です。
 
@@ -165,6 +166,26 @@ node tools/tiktok-bridge/bridge.mjs <TikTok のユーザー名> \
 - `OPENAI_API_KEY` があるとき: 30 秒ごとに、配信の文脈・束・種類の分布・直近の中身のあるコメント 12 件を OpenAI（既定 `gpt-5.6-luna`）に渡して、40 字以内の一文を書かせます。「石油精製のつなぎ間違いへの指摘が続いていて、初見さんが 3 人来ています。」のように、項目をまたいだ解釈が入ります。前回から新しいコメントが無ければ呼びません。`gpt-5.6-luna` で 1 回 1.2〜1.6 秒、1 時間あたり最大 120 回、入力 500 トークン前後なので、料金はごくわずかです（2026-09-22 時点で入力 $0.20 / 出力 $1.20 per 1M トークン）。失敗したときと 2 分たっても更新されないときはテンプレートに戻ります。
 
 Jev は文章を書けない（型付きの答えしか返さない）ので、ここだけが普通の LLM の仕事です。**有効にすると視聴者のコメントが OpenAI に送られます。** OpenAI のデータ共有（学習に提供する代わりに無料枠が付く設定）を使っている場合は、コメントが学習データに入ります。
+
+## 商品・URL の自動表示
+
+あらかじめ商品名・URL・キーワードを JSON に書いておくと、視聴者のコメントがその話題になったときに、OBS のブラウザソース（`http://127.0.0.1:8791/overlay`、背景透過）に QR コードとリンクが 60 秒出ます。「そのマイク何使ってるの？」に毎回答えなくて済みます。
+
+```json
+[
+  {"label": "配信で使っているマイク", "url": "https://example.com/mic", "keywords": ["マイク", "mic", "音質"]},
+  {"label": "今日やっているゲーム", "url": "https://example.com/game", "keywords": ["どこで買え", "セール", "何のゲーム"]}
+]
+```
+
+```bash
+moon run --target native cmd/yuru-come -- --source twitch --twitch <channel> --promos promos.json
+```
+
+- キーワードはコメントと同じ正規化（全角半角・大文字小文字・カタカナひらがな）で照合します。部分一致です
+- 同じ商品は 5 分たつまで出し直しません。別の商品は同時に出ます
+- ダッシュボードの右上に「オーバーレイに表示中: …」と出ます
+- 配信者の発話をきっかけにするには文字起こしが必要で、未対応です
 
 ## 正解データ
 
@@ -353,7 +374,7 @@ test "正規化して束ねる" {
 
 | パッケージ | ターゲット | 役割 |
 | --- | --- | --- |
-| `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、エンジン、各 Source のパーサ（Twitch IRC、YouTube の innertube と Data API、stdin、replay） |
+| `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、商品の話題、QR、エンジン、各 Source のパーサ（Twitch IRC、YouTube の innertube と Data API、stdin、replay） |
 | `runtime` | native | Source の並行実行と、判定ワーカー（タイムアウトつき） |
 | `jev` | native | Jev 互換 API の HTTP クライアント |
 | `llm` | native | OpenAI chat/completions のクライアント（空気の一文用） |
@@ -379,6 +400,7 @@ moon test --target all
 
 - [hiroyannnn/yuru-poll](https://github.com/hiroyannnn/yuru-poll)（Apache-2.0）: Twitch / YouTube / stdin のパーサとアダプタ、Jev クライアント、runtime、web サーバの骨格、CLI の解釈をコピーして直しています。
 - [hiroyannnn/plutchik-chat](https://github.com/hiroyannnn/plutchik-chat)（Apache-2.0）: OpenAI chat/completions のリクエスト組み立て・レスポンス解釈・クライアントをコピーしています。
+- [naoto24kawa/moonqr](https://github.com/elchika-inc/moonqr)（Apache-2.0）: オーバーレイの QR コード。
 - [hiroyannnn/strsim](https://github.com/hiroyannnn/strsim)（Apache-2.0、strsim-rs 由来のアルゴリズムは MIT）: 短いコメントの類似度。
 - [moonbitlang/async](https://github.com/moonbitlang/async)（Apache-2.0）: イベントループ、ソケット、TLS、HTTP。
 - [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector): `tools/tiktok-bridge` が利用者の `npm install` で取得します（2.4.0、MIT）。このリポジトリにコードは含みません。

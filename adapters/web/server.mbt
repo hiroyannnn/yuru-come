@@ -2,6 +2,8 @@
 /// 配信者が自分で見るダッシュボードの HTTP サーバ。
 ///
 /// - `GET /`            3 枠の画面（`/api/state` を 1 秒ごとにポーリング）
+/// - `GET /overlay`     OBS のブラウザソース用（背景透過）。話題になった商品の QR とリンクを出す
+/// - `GET /api/qr.svg?text=<URL>` その URL の QR コード
 /// - `GET /api/state`   エンジンの全状態
 /// - `POST /api/dismiss` `{"id": <項目 ID>, "action": "picked"|"skipped"}` 気になるコメントを消し、正解データとして記録する
 ///
@@ -56,6 +58,9 @@ async fn WebServer::handle(
       self.send_static(conn, "style.css", "text/css; charset=utf-8")
     (Get, "/app.js") =>
       self.send_static(conn, "app.js", "text/javascript; charset=utf-8")
+    (Get, "/overlay") =>
+      self.send_static(conn, "overlay.html", "text/html; charset=utf-8")
+    (Get, "/api/qr.svg") => send_qr(conn, query_param(request.path, "text"))
     (Get, "/api/state") => {
       let state = self.engine.state(@async.now())
       self.flush_labels()
@@ -115,6 +120,72 @@ async fn WebServer::send_static(
   }
   conn.send_response(200, "OK", extra_headers=content_type(mime))
   conn.write(data)
+}
+
+///|
+/// URL のクエリから 1 つ取り出す（パーセントデコード）。無ければ空。
+fn query_param(path : String, name : String) -> String {
+  guard path.find("?") is Some(q) else { return "" }
+  for pair in path[q + 1:].split("&") {
+    let (key, value) = match pair.find("=") {
+      Some(i) => (pair[:i], pair[i + 1:])
+      None => (pair, "")
+    }
+    if key == name {
+      return percent_decode(value.to_owned())
+    }
+  }
+  ""
+}
+
+///|
+fn percent_decode(text : String) -> String {
+  let bytes : Array[Byte] = []
+  let chars = text.to_array()
+  let mut i = 0
+  while i < chars.length() {
+    let c = chars[i]
+    if c == '%' && i + 2 < chars.length() {
+      match (hex_value(chars[i + 1]), hex_value(chars[i + 2])) {
+        (Some(hi), Some(lo)) => {
+          bytes.push((hi * 16 + lo).to_byte())
+          i += 3
+          continue
+        }
+        _ => ()
+      }
+    }
+    if c == '+' {
+      bytes.push(b' ')
+    } else {
+      for b in @utf8.encode(c.to_string()) {
+        bytes.push(b)
+      }
+    }
+    i += 1
+  }
+  @utf8.decode_lossy(Bytes::from_array(bytes))
+}
+
+///|
+fn hex_value(c : Char) -> Int? {
+  match c {
+    '0'..='9' => Some(c.to_int() - '0')
+    'a'..='f' => Some(c.to_int() - 'a' + 10)
+    'A'..='F' => Some(c.to_int() - 'A' + 10)
+    _ => None
+  }
+}
+
+///|
+async fn send_qr(conn : @http.ServerConnection, text : String) -> Unit {
+  match @lib.qr_svg(text) {
+    Some(svg) => {
+      conn.send_response(200, "OK", extra_headers=content_type("image/svg+xml"))
+      conn.write(svg)
+    }
+    None => send_json(conn, 400, { "error": "QR を生成できません" })
+  }
 }
 
 ///|

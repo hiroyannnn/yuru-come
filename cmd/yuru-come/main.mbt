@@ -19,6 +19,16 @@ async fn main {
 /// 選ばれた Source / Sink を組み立てて回す。
 /// ウェブダッシュボードがあるときは、Source が尽きても画面を見られるようにサーバを動かし続ける。
 async fn start(options : CliOptions) -> Unit {
+  let promos = match options.promos_path {
+    Some(path) =>
+      @lib.parse_promos(@fs.read_file(path).json()) catch {
+        err => {
+          println("--promos の \{path} を読めません: \{err}")
+          return
+        }
+      }
+    None => []
+  }
   let engine = @lib.Engine::new(
     config=@lib.EngineConfig::new(
       context=options.context,
@@ -29,6 +39,7 @@ async fn start(options : CliOptions) -> Unit {
         threshold=options.threshold,
         metric=options.metric,
       ),
+      promos~,
       pickup=@lib.PickupConfig::new(
         priority_threshold=options.priority_threshold,
         kind_floor=options.pickup_floor,

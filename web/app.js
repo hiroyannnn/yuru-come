@@ -133,6 +133,13 @@ function renderBundles(state) {
   }));
 }
 
+function renderPromos(state) {
+  const promos = state.promos || [];
+  const node = $("promo-live");
+  node.hidden = promos.length === 0;
+  node.textContent = promos.length ? `オーバーレイに表示中: ${promos.map((p) => p.label).join("、")}` : "";
+}
+
 function renderSummary(state) {
   const summary = state.summary || { text: "", source: "template" };
   $("summary-text").textContent = summary.text;
@@ -240,6 +247,7 @@ function render(state) {
   forgetGone(state);
   $("context").textContent = state.context ? `文脈: ${state.context}` : "";
   renderPickups(state);
+  renderPromos(state);
   renderSummary(state);
   renderBundles(state);
   renderMood(state);

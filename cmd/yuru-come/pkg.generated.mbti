@@ -44,6 +44,7 @@ pub(all) struct CliOptions {
   priority_threshold : Double
   pickup_floor : Double
   labels_path : String
+  promos_path : String?
 } derive(@debug.Debug)
 
 // Type aliases

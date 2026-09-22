@@ -68,6 +68,27 @@ by section 4(d) of the Apache License:
     SOFTWARE.
 
 --------------------------------------------------------------------------------
+naoto24kawa/moonqr (QR code encoder, used for the overlay QR code)
+https://github.com/elchika-inc/moonqr
+License: Apache License, Version 2.0
+
+The following is the NOTICE file distributed with moonqr, reproduced as required
+by section 4(d) of the Apache License:
+
+  moonqr
+  Copyright 2026 naoto24kawa
+
+  Portions derived from jsQR (https://github.com/cozmo/jsQR)
+  Copyright (c) 2016 Cosmo Wolfe
+  Licensed under the Apache License, Version 2.0
+
+  QR code RS block / alignment position tables derived from qrcode-generator
+  (https://github.com/kazuhikoarase/qrcode-generator)
+  Copyright (c) 2009 Kazuhiko Arase, MIT License
+
+lib/qr.mbt is copied from hiroyannnn/yuru-poll (Apache-2.0), see above.
+
+--------------------------------------------------------------------------------
 moonbitlang/async (event loop, sockets, TLS, HTTP client/server)
 https://github.com/moonbitlang/async
 License: Apache License, Version 2.0

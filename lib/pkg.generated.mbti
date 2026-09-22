@@ -72,6 +72,8 @@ pub fn parse_live_chat_page(Json) -> LiveChatPage raise YouTubeError
 
 pub fn parse_live_chat_page_html(String) -> InnertubeConfig raise YouTubeError
 
+pub fn parse_promos(Json) -> Array[Promo] raise PromoError
+
 pub fn parse_replay_line(String) -> (Int64, Comment)?
 
 pub fn parse_response(Json) -> Triage raise ResponseError
@@ -85,6 +87,8 @@ pub fn participant_id(String, String) -> String
 pub fn pong_line(String) -> String
 
 pub let priority_levels : Array[String]
+
+pub fn qr_svg(String) -> String?
 
 pub fn reconnect_delay_ms(Int, base_ms? : Int, max_ms? : Int) -> Int
 
@@ -115,6 +119,10 @@ pub(all) suberror OpenAiError {
 } derive(Eq, @debug.Debug)
 pub fn OpenAiError::is_unsupported_parameter(Self, String) -> Bool
 pub impl Show for OpenAiError
+
+pub(all) suberror PromoError {
+  Invalid(String)
+} derive(Eq, @debug.Debug)
 
 pub(all) suberror ResponseError {
   InvalidJson(String)
@@ -194,6 +202,7 @@ pub struct Engine {
   bundler : Bundler
   pickup : PickupList
   mood : Mood
+  promos : PromoBoard
   sinks : Array[&Sink]
   flow : Array[FlowEntry]
   queue : Array[Pending]
@@ -229,8 +238,9 @@ pub(all) struct EngineConfig {
   reaction_words : Array[String]
   bundle : BundleConfig
   pickup : PickupConfig
+  promos : Array[Promo]
 } derive(@debug.Debug)
-pub fn EngineConfig::new(context? : String, queue_limit? : Int, flow_limit? : Int, reaction_words? : Array[String], bundle? : BundleConfig, pickup? : PickupConfig) -> Self
+pub fn EngineConfig::new(context? : String, queue_limit? : Int, flow_limit? : Int, reaction_words? : Array[String], bundle? : BundleConfig, pickup? : PickupConfig, promos? : Array[Promo]) -> Self
 
 pub(all) struct EngineState {
   now : Int64
@@ -242,6 +252,7 @@ pub(all) struct EngineState {
   flow : Array[FlowEntry]
   stats : EngineStats
   summary : Summary
+  promos : Array[PromoView]
 } derive(ToJson, @debug.Debug)
 
 pub(all) struct EngineStats {
@@ -404,6 +415,35 @@ pub(all) struct PickupView {
   count : Int
   faded : Bool
   pinned : Bool
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct Promo {
+  label : String
+  url : String
+  keywords : Array[String]
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct PromoBoard {
+  config : PromoConfig
+  entries : Array[PromoEntry]
+}
+pub fn PromoBoard::active(Self, Int64) -> Array[PromoView]
+pub fn PromoBoard::new(Array[Promo], config? : PromoConfig) -> Self
+pub fn PromoBoard::notice(Self, String, Int64) -> Promo?
+
+pub(all) struct PromoConfig {
+  show_ms : Int64
+  cooldown_ms : Int64
+} derive(@debug.Debug)
+pub fn PromoConfig::new(show_ms? : Int64, cooldown_ms? : Int64) -> Self
+
+type PromoEntry
+
+pub(all) struct PromoView {
+  label : String
+  url : String
+  trigger : String
+  shown_at : Int64
 } derive(Eq, ToJson, @debug.Debug)
 
 pub(all) struct ReactionCount {

@@ -10,6 +10,8 @@ pub(all) struct EngineConfig {
   reaction_words : Array[String]
   bundle : BundleConfig
   pickup : PickupConfig
+  /// 話題になったら画面に出す商品・URL
+  promos : Array[Promo]
 } derive(Debug)
 
 ///|
@@ -20,8 +22,9 @@ pub fn EngineConfig::new(
   reaction_words? : Array[String] = [],
   bundle? : BundleConfig = BundleConfig::new(),
   pickup? : PickupConfig = PickupConfig::new(),
+  promos? : Array[Promo] = [],
 ) -> EngineConfig {
-  { context, queue_limit, flow_limit, reaction_words, bundle, pickup, }
+  { context, queue_limit, flow_limit, reaction_words, bundle, pickup, promos, }
 }
 
 ///|
@@ -121,6 +124,8 @@ pub(all) struct EngineState {
   stats : EngineStats
   /// いまの空気の一文
   summary : Summary
+  /// 話題になって表示中の商品・URL
+  promos : Array[PromoView]
 } derive(Debug, ToJson)
 
 ///|
@@ -172,6 +177,7 @@ pub struct Engine {
   bundler : Bundler
   pickup : PickupList
   mood : Mood
+  promos : PromoBoard
   sinks : Array[&Sink]
   /// 古い順
   flow : Array[FlowEntry]
@@ -199,6 +205,7 @@ pub fn Engine::new(config? : EngineConfig = EngineConfig::new()) -> Engine {
     rules: ReactionRules::new(extra_words=config.reaction_words),
     bundler: Bundler::new(config=config.bundle),
     pickup: PickupList::new(config=config.pickup),
+    promos: PromoBoard::new(config.promos),
     mood: Mood::new(retention_ms=MOOD_LONG_WINDOW_MS),
     sinks: [],
     flow: [],
@@ -235,6 +242,7 @@ pub fn Engine::context(self : Engine) -> String {
 pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
   self.received += 1
   self.forget_stale_verdicts(now)
+  self.promos.notice(comment.text, now) |> ignore
   let key = normalize(comment.text, emotes=comment.emotes)
   let hit = self.bundler.add(key, comment, now)
   let entry : FlowEntry = {
@@ -542,6 +550,7 @@ pub fn Engine::state(
       judge_delay_ms: self.judge_delay_ms,
     },
     summary: { text: "", source: "template", at: now, },
+    promos: self.promos.active(now),
   }
   // LLM の一文が新しければそれを、無いか古ければテンプレートの一文を載せる
   let summary : Summary = match self.llm_summary {
