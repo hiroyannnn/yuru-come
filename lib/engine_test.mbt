@@ -389,3 +389,35 @@ test "キューの上限が 0 以下でも落ちずに、判定に回さず全�
   assert_eq(state.stats.dropped, 1)
   assert_eq(state.stats.queue_length, 0)
 }
+
+///|
+test "反応と同じ束に入っても、疑問符つきのコメントは相乗りせず Jev に回す" {
+  let engine = @lib.Engine::new()
+  engine.ingest(viewer("a", "きたあああ"), 0)
+  assert_eq(engine.state(0).stats.early, 1)
+  // 正規化すると同じ「きた」になるが、疑問文なので反応ではない
+  engine.ingest(viewer("b", "きたあああ？"), 10)
+  let state = engine.state(10)
+  assert_eq(state.stats.queue_length, 1)
+  assert_eq(state.flow[0].status, Pending)
+}
+
+///|
+test "キューを間引くとき、疑問符つきとトラブルらしいコメントは後回しにする" {
+  let engine = @lib.Engine::new(config=@lib.EngineConfig::new(queue_limit=3))
+  engine.ingest(viewer("a", "音出てない"), 0)
+  engine.ingest(viewer("b", "これ何？"), 10)
+  engine.ingest(viewer("c", "今日は仕事が終わってから来ました"), 20)
+  engine.ingest(viewer("d", "あふれさせる四番目の長いコメント"), 30)
+  let dropped = engine.state(30).flow.filter(entry => entry.status == Dropped)
+  // いちばん短いのは「これ何？」と「音出てない」だが、疑問符つきとトラブルらしいものは残す
+  assert_eq(dropped.map(entry => entry.comment.text), ["今日は仕事が終わってから来ました"])
+}
+
+///|
+test "後回しにする候補しか無ければ、その中でいちばん短いものを落とす" {
+  let engine = @lib.Engine::new(config=@lib.EngineConfig::new(queue_limit=1))
+  engine.ingest(viewer("a", "これ何？"), 0)
+  engine.ingest(viewer("b", "それ何？？？"), 10)
+  assert_eq(engine.state(10).stats.dropped, 1)
+}

@@ -266,9 +266,11 @@ pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
     return self.settle(entry, mood_id, Reaction, None, Early)
   }
   match self.verdicts.get(hit.key) {
+    // 反応の束（早期判定で決まったもの）には、疑問符つきのコメントを相乗りさせない
     Some({ decided: Some((kind, priority)), .. } as verdict) if !(kind
       is Unjudged) &&
-      (hit.exact || !is_pickup_kind(kind)) => {
+      (hit.exact || !is_pickup_kind(kind)) &&
+      !(kind is Reaction && asks_question(comment.text)) => {
       verdict.touched_at = now
       self.inherited += 1
       self.follow(entry, mood_id, verdict, kind, priority)
@@ -302,6 +304,41 @@ pub fn Engine::ingest(self : Engine, comment : Comment, now : Int64) -> Unit {
 }
 
 ///|
+fn asks_question(text : String) -> Bool {
+  text.contains("?") || text.contains("？")
+}
+
+///|
+/// 間引くときに後回しにするコメントか。疑問符つきと、配信トラブルの報告らしいもの。
+fn worth_keeping(comment : Comment) -> Bool {
+  asks_question(comment.text) ||
+  trouble_hints.iter().any(hint => comment.text.contains(hint))
+}
+
+///|
+/// 配信トラブルの報告によく出る語。間引きの優先順位にだけ使う（判定は Jev がする）。
+let trouble_hints : Array[String] = [
+  "音", "声", "マイク", "画面", "映像", "配信", "止ま", "固ま", "落ち", "聞こえ", "見えな", "カク",
+  "ラグ", "遅延", "ノイズ",
+]
+
+///|
+/// 候補の中から落とすものを選ぶ。後回しにしないものを優先し、同じなら短いもの。
+fn pick_victim(candidates : ArrayView[Pending]) -> Int {
+  let mut victim = 0
+  for i in 1..<candidates.length() {
+    let keep_current = worth_keeping(candidates[victim].comment)
+    let keep_candidate = worth_keeping(candidates[i].comment)
+    if (keep_current && !keep_candidate) ||
+      (keep_current == keep_candidate &&
+      candidates[i].length < candidates[victim].length) {
+      victim = i
+    }
+  }
+  victim
+}
+
+///|
 /// 配信者が拾うべき種類か（類似度だけで束に入ったコメントを相乗りさせない種類）。
 fn is_pickup_kind(kind : Kind) -> Bool {
   kind is (Question | Request | Correction | FirstTime | Trouble)
@@ -316,12 +353,12 @@ fn Engine::shed_overflow(self : Engine) -> Unit {
     0
   }
   while self.queue.length() > limit {
+    // 古い半分のうちいちばん短いものを落とす。疑問符つきとトラブルらしいものは後回しにし、
+    // 古い半分が全部そうなら、新しいものを除いた全体から探す
     let older_half = (self.queue.length() + 1) / 2
-    let mut victim = 0
-    for i in 1..<older_half {
-      if self.queue[i].length < self.queue[victim].length {
-        victim = i
-      }
+    let mut victim = pick_victim(self.queue[:older_half])
+    if worth_keeping(self.queue[victim].comment) && self.queue.length() > 1 {
+      victim = pick_victim(self.queue[:self.queue.length() - 1])
     }
     let pending = self.queue.remove(victim)
     self.resolve(pending, Unjudged, None, Dropped)
