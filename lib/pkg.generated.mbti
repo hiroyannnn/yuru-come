@@ -216,8 +216,10 @@ pub fn Engine::context(Self) -> String
 pub fn Engine::dismiss(Self, Int) -> Bool
 pub fn Engine::ingest(Self, Comment, Int64) -> Unit
 pub fn Engine::new(config? : EngineConfig) -> Self
+pub fn Engine::resolve_pickup(Self, Int, PickupOutcome, Int64) -> Bool
 pub fn Engine::set_summary(Self, String, Int64) -> Unit
 pub fn Engine::state(Self, Int64, flow_limit? : Int) -> EngineState
+pub fn Engine::take_labels(Self) -> Array[PickupLabel]
 pub fn Engine::take_next(Self) -> Pending?
 
 pub(all) struct EngineConfig {
@@ -361,18 +363,37 @@ pub fn PickupConfig::should_pick_up(Self, Kind, Double) -> Bool
 
 type PickupItem
 
+pub(all) struct PickupLabel {
+  comment : Comment
+  kind : Kind
+  priority : Double
+  offered_at : Int64
+  resolved_at : Int64
+  outcome : PickupOutcome
+} derive(Eq, ToJson, @debug.Debug)
+
 pub struct PickupList {
   config : PickupConfig
   mut items : Array[PickupItem]
   mut next_id : Int
+  labels : Array[PickupLabel]
 }
 pub fn PickupList::bump(Self, Int) -> Bool
-pub fn PickupList::dismiss(Self, Int) -> Bool
+pub fn PickupList::dismiss(Self, Int, now? : Int64) -> Bool
 pub fn PickupList::new(config? : PickupConfig) -> Self
 pub fn PickupList::offer(Self, Comment, Kind, Double, Int64) -> Int?
 pub fn PickupList::prune(Self, Int64) -> Unit
+pub fn PickupList::resolve(Self, Int, PickupOutcome, Int64) -> Bool
 pub fn PickupList::size(Self) -> Int
+pub fn PickupList::take_labels(Self) -> Array[PickupLabel]
 pub fn PickupList::view(Self, Int64) -> Array[PickupView]
+
+pub(all) enum PickupOutcome {
+  Picked
+  Skipped
+  Expired
+} derive(Eq, @debug.Debug)
+pub impl ToJson for PickupOutcome
 
 pub(all) struct PickupView {
   id : Int

@@ -59,7 +59,12 @@ function authorText(comment) {
 }
 
 function createPickup(item) {
-  const li = el("li");
+  const li = el("li", "pickup-row");
+  const skip = el("button", "skip", "×");
+  skip.type = "button";
+  skip.title = "スルー（拾わずに消す）";
+  skip.setAttribute("aria-label", "スルー");
+  skip.addEventListener("click", (event) => { event.stopPropagation(); dismiss(item.id, "skipped"); });
   const button = el("button", "pickup");
   button.type = "button";
   const head = el("div", "pickup-head");
@@ -68,13 +73,13 @@ function createPickup(item) {
     el("span", "author"), el("span", "age"),
   );
   button.append(head, el("div", "pickup-text"));
-  button.addEventListener("click", () => dismiss(item.id));
-  li.append(button);
+  button.addEventListener("click", () => dismiss(item.id, "picked"));
+  li.append(button, skip);
   return li;
 }
 
 function updatePickup(state, li, item) {
-  const button = li.firstElementChild;
+  const button = li.querySelector(".pickup");
   kindColor(button, item.kind);
   button.classList.toggle("faded", item.faded);
   button.classList.toggle("pinned", item.pinned);
@@ -95,14 +100,15 @@ function renderPickups(state) {
   syncList($("pickups"), items, createPickup, (li, item) => updatePickup(state, li, item));
 }
 
-async function dismiss(id) {
+// action は "picked"（拾った）か "skipped"（スルー）。正解データとしてサーバ側に記録される
+async function dismiss(id, action) {
   dismissed.add(id);
   if (lastState) renderPickups(lastState);
   try {
     await fetch("/api/dismiss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, action }),
     });
   } catch (_) {
     dismissed.delete(id);
@@ -132,6 +138,7 @@ function renderSummary(state) {
   $("summary-text").textContent = summary.text;
   $("summary").classList.toggle("template", summary.source !== "llm");
   $("summary-source").textContent = summary.source === "llm" ? `（LLM、${ageText(state.now, summary.at)}）` : "";
+  $("summary-source").classList.add("details");
 }
 
 function renderMood(state) {
@@ -259,6 +266,17 @@ async function refresh() {
     refreshing = false;
   }
 }
+
+// デバッグ寄りの情報（Jev の滞留、件数、要約の出所）は「詳細」で出す。設定はこのブラウザに記憶する
+function setDetails(on) {
+  document.body.classList.toggle("show-details", on);
+  $("details-toggle").setAttribute("aria-pressed", String(on));
+  try { localStorage.setItem("yuru-come.details", on ? "1" : "0"); } catch (_) {}
+}
+let detailsOn = false;
+try { detailsOn = localStorage.getItem("yuru-come.details") === "1"; } catch (_) {}
+setDetails(detailsOn);
+$("details-toggle").addEventListener("click", () => setDetails(!document.body.classList.contains("show-details")));
 
 refresh();
 setInterval(refresh, POLL_MS);

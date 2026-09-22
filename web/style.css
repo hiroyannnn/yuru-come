@@ -45,6 +45,12 @@ body {
 .topbar h1 { margin: 0; font-size: 16px; letter-spacing: .04em; color: var(--accent); }
 .context { margin: 0; color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conn { margin: 0; font-size: 12px; color: var(--muted); }
+.details-toggle {
+  font: inherit; font-size: 12px; color: var(--muted); background: none;
+  border: 1px solid var(--line); border-radius: 999px; padding: 0 10px; cursor: pointer;
+}
+.details-toggle[aria-pressed="true"] { color: var(--text); border-color: var(--muted); }
+body:not(.show-details) .details { display: none !important; }
 .conn.down { color: var(--danger); }
 
 .panels {
@@ -70,7 +76,7 @@ body {
 .empty { padding: 16px 0; }
 [hidden] { display: none !important; }
 
-/* 拾うべきコメント */
+/* 気になるコメント */
 .pickup-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .pickup {
   width: 100%;
@@ -90,6 +96,13 @@ body {
 .pickup.faded { opacity: .45; }
 .pickup.pinned { background: #33202a; border-color: var(--danger); }
 .pickup-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.pickup-row { position: relative; }
+.skip {
+  position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; line-height: 22px; text-align: center;
+  font: inherit; font-size: 14px; color: var(--muted); background: none; border: 1px solid transparent; border-radius: 50%; cursor: pointer;
+}
+.skip:hover, .skip:focus-visible { color: var(--text); border-color: var(--line); outline: none; }
+.pickup-row .age { margin-right: 28px; }
 .pickup-text { margin-top: 4px; font-size: 18px; line-height: 1.45; overflow-wrap: anywhere; }
 .pickup.pinned .pickup-text { font-weight: 600; }
 .badge {

@@ -55,13 +55,15 @@ pub struct PickupList {
   config : PickupConfig
   mut items : Array[PickupItem]
   mut next_id : Int
+  /// まだ取り出されていない正解データ
+  labels : Array[PickupLabel]
 }
 
 ///|
 pub fn PickupList::new(
   config? : PickupConfig = PickupConfig::new(),
 ) -> PickupList {
-  { config, items: [], next_id: 1, }
+  { config, items: [], next_id: 1, labels: [], }
 }
 
 ///|
@@ -114,17 +116,44 @@ pub fn PickupList::bump(self : PickupList, id : Int) -> Bool {
 }
 
 ///|
-/// 既読にして消す。該当する項目があれば true。
-pub fn PickupList::dismiss(self : PickupList, id : Int) -> Bool {
-  let before = self.items.length()
-  self.items = self.items.filter(item => item.id != id)
-  self.items.length() < before
+/// 既読にして消す（「拾った」として記録する）。該当する項目があれば true。
+pub fn PickupList::dismiss(
+  self : PickupList,
+  id : Int,
+  now? : Int64 = 0,
+) -> Bool {
+  self.resolve(id, Picked, now)
 }
 
 ///|
-/// 期限切れを捨てる。
+/// 期限切れを捨てる（「期限切れ」として記録する）。
 pub fn PickupList::prune(self : PickupList, now : Int64) -> Unit {
-  self.items = self.items.filter(item => now - item.at < self.config.expire_ms)
+  let kept : Array[PickupItem] = []
+  for item in self.items {
+    if now - item.at < self.config.expire_ms {
+      kept.push(item)
+    } else {
+      self.record(item, Expired, now)
+    }
+  }
+  self.items = kept
+}
+
+///|
+fn PickupList::record(
+  self : PickupList,
+  item : PickupItem,
+  outcome : PickupOutcome,
+  now : Int64,
+) -> Unit {
+  self.labels.push({
+    comment: item.comment,
+    kind: item.kind,
+    priority: item.priority,
+    offered_at: item.at,
+    resolved_at: now,
+    outcome,
+  })
 }
 
 ///|
@@ -159,4 +188,67 @@ pub fn PickupList::view(self : PickupList, now : Int64) -> Array[PickupView] {
 /// 保持している項目の数（期限切れを含む）。
 pub fn PickupList::size(self : PickupList) -> Int {
   self.items.length()
+}
+
+///|
+/// 配信者が気になるコメントをどうしたか。
+pub(all) enum PickupOutcome {
+  /// カードをクリックした（拾った）
+  Picked
+  /// × でスルーした
+  Skipped
+  /// 何もしないまま期限切れで消えた
+  Expired
+} derive(Debug, Eq)
+
+///|
+pub impl ToJson for PickupOutcome with fn to_json(self) {
+  Json::string(
+    match self {
+      Picked => "picked"
+      Skipped => "skipped"
+      Expired => "expired"
+    },
+  )
+}
+
+///|
+/// 正解データ 1 件。仕分けの評価や学習に使う。
+pub(all) struct PickupLabel {
+  comment : Comment
+  kind : Kind
+  priority : Double
+  offered_at : Int64
+  resolved_at : Int64
+  outcome : PickupOutcome
+} derive(Debug, Eq, ToJson)
+
+///|
+/// 配信者の操作（拾った・スルー）で項目を消し、記録する。該当する項目があれば true。
+pub fn PickupList::resolve(
+  self : PickupList,
+  id : Int,
+  outcome : PickupOutcome,
+  now : Int64,
+) -> Bool {
+  let kept : Array[PickupItem] = []
+  let mut found = false
+  for item in self.items {
+    if item.id == id {
+      found = true
+      self.record(item, outcome, now)
+    } else {
+      kept.push(item)
+    }
+  }
+  self.items = kept
+  found
+}
+
+///|
+/// 溜まった正解データを取り出して空にする。
+pub fn PickupList::take_labels(self : PickupList) -> Array[PickupLabel] {
+  let labels = self.labels.copy()
+  self.labels.clear()
+  labels
 }

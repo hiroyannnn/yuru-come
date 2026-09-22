@@ -121,3 +121,10 @@ test "本数や上限に使えない値はエラー" {
   assert_true(parse_error(["--window", "0"]) is Some(BadValue("--window", "0")))
   assert_true(parse_error(["--speed", "0"]) is Some(BadValue("--speed", "0")))
 }
+
+///|
+test "正解データの書き先は変えられ、空にすると書かない" {
+  assert_eq(parse([]).labels_path, "labels.jsonl")
+  assert_eq(parse(["--labels", "out/l.jsonl"]).labels_path, "out/l.jsonl")
+  assert_eq(parse(["--labels", ""]).labels_path, "")
+}
