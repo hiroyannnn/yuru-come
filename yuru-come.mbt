@@ -39,6 +39,8 @@ pub using @lib {
   parse_stdin_line,
   parse_replay_line,
   replay_delay_ms,
+  reconnect_delay_ms,
+  connection_was_healthy,
   jev_kinds,
   priority_levels,
   build_request,

@@ -7,7 +7,7 @@ pub(all) struct CliOptions {
   host : String
   /// Jev に渡す配信の文脈
   context : String
-  twitch_channel : String?
+  twitch_channels : Array[String]
   youtube_video_id : String?
   replay_path : String?
   /// replay の再生速度
@@ -48,7 +48,7 @@ pub let usage : String =
   #|
   #|  --source stdin|twitch|youtube|replay  コメントの入口（複数指定可、既定 stdin）
   #|  --sink web|terminal                   出口（複数指定可、既定 web）
-  #|  --twitch <channel>                    Twitch のチャンネル名（--source twitch 用）
+  #|  --twitch <channel>                    Twitch のチャンネル名（--source twitch 用、複数指定可）
   #|  --youtube <videoId>                   YouTube Live の動画 ID（--source youtube 用、YOUTUBE_API_KEY が必要）
   #|  --replay <file.tsv>                   再生するログ（--source replay 用。時刻ms<TAB>参加者ID<TAB>発言）
   #|  --speed <n>                           replay の再生速度（既定 1）
@@ -77,7 +77,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
   let mut port = DEFAULT_PORT
   let mut host = "127.0.0.1"
   let mut context = ""
-  let mut twitch_channel : String? = None
+  let twitch_channels : Array[String] = []
   let mut youtube_video_id : String? = None
   let mut replay_path : String? = None
   let mut speed = 1.0
@@ -128,7 +128,8 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
       "--port" => port = int_value()
       "--host" => host = value()
       "--context" => context = value()
-      "--twitch" => twitch_channel = Some(value())
+      "--twitch" =>
+        twitch_channels.push(value().trim_start(chars="#").to_owned())
       "--youtube" => youtube_video_id = Some(value())
       "--replay" => replay_path = Some(value())
       "--speed" => {
@@ -179,7 +180,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
     port,
     host,
     context,
-    twitch_channel,
+    twitch_channels,
     youtube_video_id,
     replay_path,
     speed,

@@ -37,8 +37,16 @@ test "README の起動例を解釈できる" {
     "Factorio 配信",
   ])
   assert_eq(options.sources, ["twitch"])
-  assert_eq(options.twitch_channel, Some("somechannel"))
+  assert_eq(options.twitch_channels, ["somechannel"])
   assert_eq(options.context, "Factorio 配信")
+}
+
+///|
+test "--twitch は複数指定でき、# は取り除く" {
+  let options = parse([
+    "--source", "twitch", "--twitch", "#alice", "--twitch", "bob",
+  ])
+  assert_eq(options.twitch_channels, ["alice", "bob"])
 }
 
 ///|
