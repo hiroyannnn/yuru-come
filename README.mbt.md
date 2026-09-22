@@ -40,13 +40,39 @@ Jev が遅くてもチャットの読み取りは止めません。判定待ち�
 
 ## セットアップ
 
-[MoonBit](https://www.moonbitlang.com/download/)（moon 0.1.20260915 以降）と、Jev 互換の判定サーバが必要です。
+### バイナリで使う（配信者向け）
+
+[Releases](https://github.com/hiroyannnn/yuru-come/releases) から自分の環境のもの（macOS Apple Silicon か Linux x86_64）を落として展開します。中に `yuru-come`（本体）、`yuru-come-eval`（評価コマンド）、`samples/`、`.env.example` が入っています。
+
+```bash
+tar xzf yuru-come-v0.1.0-macos-arm64.tar.gz
+cd yuru-come-v0.1.0-macos-arm64
+cp .env.example .env   # JEV_API_KEY などを書く
+./yuru-come --source twitch --twitch <channel>
+```
+
+`.env` は起動時に自動で読みます（環境変数が優先）。ダッシュボードとオーバーレイはバイナリに埋め込んであるので、ほかのファイルは要りません。よく使うオプションは `yuru-come.json` に書いておけます（キーはフラグ名と同じ、CLI が上書き）。
+
+```json
+{"sources": ["twitch"], "twitch": ["mychannel"], "context": "雑談配信", "promos": "promos.json"}
+```
+
+macOS では初回に「開発元を確認できない」と出ることがあります。`xattr -d com.apple.quarantine yuru-come` で外してください。
+
+### ソースから使う
+
+[MoonBit](https://www.moonbitlang.com/download/)（moon 0.1.20260915 以降）が必要です。
 
 ```bash
 git clone https://github.com/hiroyannnn/yuru-come
 cd yuru-come
 moon build --target native
+moon run --target native cmd/yuru-come -- --source twitch --twitch <channel>
 ```
+
+`make check` がコミット前の確認（.mbti、整形、埋め込み資産、型検査）、`make test` が全ターゲットのテスト、`make release v=X.Y.Z` がリリース（バージョン更新、GitHub Release の作成。CI がバイナリを添付し、`MOON_TOKEN` があれば mooncakes.io に publish）です。`web/` を編集したら `make assets` で埋め込みを作り直してください（`--web-dir web` を付ければ編集が即反映されます）。
+
+### 判定サーバ
 
 判定サーバは環境変数で選びます。
 
@@ -83,6 +109,9 @@ moon run --target native cmd/yuru-come -- --source twitch --twitch <channel> --p
 | `--sink web\|terminal` | `web` | 出口。複数指定可 |
 | `--context <text>` | なし | Jev に渡す配信の文脈（配信タイトルや話題）。指摘や質問の判定が安定します |
 | `--port <n>` / `--host <addr>` | `8791` / `127.0.0.1` | ダッシュボードの待ち受け |
+| `--config <file.json>` | `yuru-come.json` | 設定ファイル。キーはフラグ名と同じ（`twitch` は配列）。CLI が上書き |
+| `--web-dir <dir>` | なし（埋め込み） | 静的ファイルの場所。`web/` を編集しながら試すとき用 |
+| `--version` | | バージョンを表示 |
 | `--workers <n>` | `2` | 並行して Jev に投げる本数。本家 Jev なら増やせます |
 | `--queue-limit <n>` | `50` | 判定待ちキューの上限 |
 | `--window <sec>` | `30` | 反応を束ねる時間窓 |
