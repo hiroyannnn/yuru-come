@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  binaries:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: macos-arm64
+          - os: ubuntu-latest
+            target: linux-x86_64
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Install dependencies
+        run: moon update && moon install
+      - name: Build
+        run: moon build --target native --release
+      - name: Package
+        run: |
+          name="yuru-come-${{ github.event.release.tag_name }}-${{ matrix.target }}"
+          mkdir -p "dist/$name/samples"
+          cp _build/native/release/build/cmd/yuru-come/yuru-come.exe "dist/$name/yuru-come"
+          cp _build/native/release/build/cmd/eval/eval.exe "dist/$name/yuru-come-eval"
+          cp samples/wave.tsv samples/promos.json "dist/$name/samples/"
+          cp README.mbt.md "dist/$name/README.md"
+          cp LICENSE NOTICE "dist/$name/"
+          printf 'JEV_URL=https://ai-gateway.vercel.sh/typesafe\nJEV_MODEL=typesafe-ai/jev\nJEV_API_KEY=\n# OPENAI_API_KEY=\n' > "dist/$name/.env.example"
+          tar -C dist -czf "dist/$name.tar.gz" "$name"
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/*.tar.gz --clobber
+
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      # トークン本体は publish の step にだけ渡す。ここでは有無だけを見る
+      HAS_MOON_TOKEN: ${{ secrets.MOON_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Install dependencies
+        run: moon update && moon install
+      - name: Test
+        run: moon test --target all
+      - name: Publish to mooncakes.io
+        if: ${{ env.HAS_MOON_TOKEN == 'true' }}
+        env:
+          MOON_TOKEN: ${{ secrets.MOON_TOKEN }}
+        run: |
+          mkdir -p ~/.moon
+          echo "{\"token\":\"${MOON_TOKEN}\",\"username\":\"hiroyannnn\"}" > ~/.moon/credentials.json
+          moon publish

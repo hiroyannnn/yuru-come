@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub async fn load_dotenv(path? : String) -> Int
+
 pub async fn log(String) -> Unit
 
 pub async fn run(@lib.Engine, async (String, @lib.Comment) -> @lib.Triage, Array[&@lib.Source], workers? : Int, judge_timeout_ms? : Int) -> Unit

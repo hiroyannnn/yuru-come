@@ -11,6 +11,7 @@ const DEFAULT_CONTEXT : String = "ゲーム実況の配信。雑談もまじえ�
 
 ///|
 async fn main {
+  @runtime.load_dotenv() |> ignore
   let args = @env.args()
   let mut data = "eval/comments.tsv"
   let mut context = DEFAULT_CONTEXT

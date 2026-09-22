@@ -7,9 +7,13 @@ import {
 }
 
 // Values
+pub const DEFAULT_CONFIG_PATH : String = "yuru-come.json"
+
 pub const DEFAULT_PORT : Int = 8791
 
-pub fn parse_cli(ArrayView[String]) -> CliOptions raise CliError
+pub const VERSION : String = "0.1.0"
+
+pub fn parse_cli(ArrayView[String], defaults? : CliOptions) -> CliOptions raise CliError
 
 pub let usage : String
 
@@ -20,7 +24,12 @@ pub suberror CliError {
   BadNumber(String)
   BadValue(String, String)
   Help
+  Version
 } derive(@debug.Debug)
+
+pub suberror ConfigError {
+  Invalid(String)
+} derive(Eq, @debug.Debug)
 
 // Types and methods
 pub(all) struct CliOptions {
@@ -34,7 +43,7 @@ pub(all) struct CliOptions {
   replay_path : String?
   speed : Double
   stdin_source : String
-  web_dir : String
+  web_dir : String?
   workers : Int
   queue_limit : Int
   window_sec : Int
@@ -45,7 +54,10 @@ pub(all) struct CliOptions {
   pickup_floor : Double
   labels_path : String
   promos_path : String?
+  config_path : String
 } derive(@debug.Debug)
+pub fn CliOptions::default() -> Self
+pub fn CliOptions::from_json(Json) -> Self raise ConfigError
 
 // Type aliases
 
