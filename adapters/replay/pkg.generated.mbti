@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/adapters/replay"
+
+import {
+  "hiroyannnn/yuru-come/lib",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct ReplaySource {
+  path : String
+  speed : Double
+}
+pub fn ReplaySource::new(String, speed? : Double) -> Self
+pub impl @lib.Source for ReplaySource
+
+// Type aliases
+
+// Traits

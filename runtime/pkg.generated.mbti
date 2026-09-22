@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/runtime"
+
+import {
+  "hiroyannnn/yuru-come/lib",
+}
+
+// Values
+pub async fn log(String) -> Unit
+
+pub async fn run(@lib.Engine, async (String, @lib.Comment) -> @lib.Triage, Array[&@lib.Source], workers? : Int, judge_timeout_ms? : Int) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

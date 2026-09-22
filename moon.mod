@@ -19,7 +19,15 @@ repository = "https://github.com/hiroyannnn/yuru-come"
 
 license = "Apache-2.0"
 
-keywords = ["jev", "typesafe", "live-chat", "comment-viewer", "streaming", "youtube", "twitch"]
+keywords = [
+  "jev",
+  "typesafe",
+  "live-chat",
+  "comment-viewer",
+  "streaming",
+  "youtube",
+  "twitch",
+]
 
 preferred_target = "native"
 
@@ -27,4 +35,5 @@ description = "Loose comment viewer: bundles duplicate live-chat reactions and s
 
 import {
   "moonbitlang/async@0.22.1",
+  "hiroyannnn/strsim@0.2.0",
 }

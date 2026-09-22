@@ -1,0 +1,356 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/lib"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub const DEFAULT_POLLING_INTERVAL_MS : Int = 5000
+
+pub const JEV_MODEL : String = "jev-latest"
+
+pub const KIND_INSTRUCTIONS : String = "これはライブ配信のチャット欄に視聴者が書いたコメントです。このコメントはどの種類か？"
+
+pub const KIND_QUESTION_KEY : String = "kind"
+
+pub const MOOD_LONG_WINDOW_MS : Int64 = 300_000
+
+pub const MOOD_SHORT_WINDOW_MS : Int64 = 30_000
+
+pub const PRIORITY_INSTRUCTIONS : String = "配信者がこのコメントを読み上げたり返事をしたりして拾うべき度合いは？配信者への質問、ミスの指摘、初見の挨拶、配信トラブルの報告は拾うべき。視聴者同士の雑談、ただの相づち、荒らしは拾わなくてよい。"
+
+pub const PRIORITY_QUESTION_KEY : String = "priority"
+
+pub fn build_request(String, context? : String, model? : String) -> Json
+
+pub fn compress_runs(String) -> String
+
+pub let default_reaction_words : Array[String]
+
+pub let jev_kinds : Array[Kind]
+
+pub fn live_chat_messages_url(String, String, String?) -> String
+
+pub fn normalize(String, emotes? : Array[String]) -> String
+
+pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[Token]
+
+pub fn parse_irc_line(String) -> IrcMessage
+
+pub fn parse_live_chat_id(Json) -> String raise YouTubeError
+
+pub fn parse_live_chat_page(Json) -> LiveChatPage raise YouTubeError
+
+pub fn parse_replay_line(String) -> (Int64, Comment)?
+
+pub fn parse_response(Json) -> Triage raise ResponseError
+
+pub fn parse_response_text(String) -> Triage raise ResponseError
+
+pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> Comment?
+
+pub fn participant_id(String, String) -> String
+
+pub fn pong_line(String) -> String
+
+pub let priority_levels : Array[String]
+
+pub fn render_pickup_line(FlowEntry) -> String?
+
+pub fn replay_delay_ms(Int64, Int64, Double) -> Int
+
+pub fn twitch_login_lines(String, String) -> Array[String]
+
+pub fn unify_width(String) -> String
+
+pub fn videos_list_url(String, String) -> String
+
+// Errors
+pub(all) suberror ResponseError {
+  InvalidJson(String)
+  MissingField(String)
+  TypeMismatch(String)
+  UnknownKind(String)
+} derive(Eq, @debug.Debug)
+
+pub suberror YouTubeError {
+  VideoNotFound
+  NotLive
+  TypeMismatch(String)
+} derive(Eq, @debug.Debug)
+
+// Types and methods
+type Bundle
+
+pub(all) struct BundleConfig {
+  window_ms : Int64
+  threshold : Double
+  fuzzy_max_len : Int
+  metric : BundleMetric
+} derive(@debug.Debug)
+pub fn BundleConfig::new(window_ms? : Int64, threshold? : Double, fuzzy_max_len? : Int, metric? : BundleMetric) -> Self
+
+pub(all) struct BundleHit {
+  key : String
+  count : Int
+  exact : Bool
+} derive(Eq, @debug.Debug)
+
+pub(all) enum BundleMetric {
+  NormalizedLevenshtein
+  JaroWinkler
+} derive(Eq, @debug.Debug)
+
+pub(all) struct BundleSummary {
+  key : String
+  representative : String
+  count : Int
+  participants : Int
+  last_at : Int64
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct BundleVerdict {
+  mut decided : (Kind, Double?)?
+  mut pickup_id : Int?
+  followers : Array[(FlowEntry, Int)]
+  created_at : Int64
+  mut touched_at : Int64
+}
+
+pub struct Bundler {
+  config : BundleConfig
+  mut bundles : Array[Bundle]
+}
+pub fn Bundler::add(Self, String, Comment, Int64) -> BundleHit
+pub fn Bundler::new(config? : BundleConfig) -> Self
+pub fn Bundler::prune(Self, Int64) -> Unit
+pub fn Bundler::summaries(Self, Int64, min_count? : Int, limit? : Int) -> Array[BundleSummary]
+
+pub(all) struct Comment {
+  participant_id : String
+  author : String
+  text : String
+  at : Int64
+  emotes : Array[String]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String]) -> Self
+pub fn Comment::platform(Self) -> String
+
+pub struct Engine {
+  config : EngineConfig
+  rules : ReactionRules
+  bundler : Bundler
+  pickup : PickupList
+  mood : Mood
+  sinks : Array[&Sink]
+  flow : Array[FlowEntry]
+  queue : Array[Pending]
+  verdicts : Map[String, BundleVerdict]
+  mut next_entry_id : Int
+  mut received : Int
+  mut early : Int
+  mut inherited : Int
+  mut sent : Int
+  mut judged : Int
+  mut failed : Int
+  mut dropped : Int
+  mut in_flight : Int
+  mut judge_delay_ms : Int64
+}
+pub fn Engine::add_sink(Self, &Sink) -> Unit
+pub fn Engine::complete(Self, Pending, Triage?, Int64) -> Unit
+pub fn Engine::context(Self) -> String
+pub fn Engine::dismiss(Self, Int) -> Bool
+pub fn Engine::ingest(Self, Comment, Int64) -> Unit
+pub fn Engine::new(config? : EngineConfig) -> Self
+pub fn Engine::state(Self, Int64, flow_limit? : Int) -> EngineState
+pub fn Engine::take_next(Self) -> Pending?
+
+pub(all) struct EngineConfig {
+  context : String
+  queue_limit : Int
+  flow_limit : Int
+  reaction_words : Array[String]
+  bundle : BundleConfig
+  pickup : PickupConfig
+} derive(@debug.Debug)
+pub fn EngineConfig::new(context? : String, queue_limit? : Int, flow_limit? : Int, reaction_words? : Array[String], bundle? : BundleConfig, pickup? : PickupConfig) -> Self
+
+pub(all) struct EngineState {
+  now : Int64
+  context : String
+  pickups : Array[PickupView]
+  bundles : Array[BundleSummary]
+  mood_short : MoodSnapshot
+  mood_long : MoodSnapshot
+  flow : Array[FlowEntry]
+  stats : EngineStats
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct EngineStats {
+  received : Int
+  early : Int
+  inherited : Int
+  sent : Int
+  judged : Int
+  failed : Int
+  dropped : Int
+  queue_length : Int
+  queue_limit : Int
+  in_flight : Int
+  judge_delay_ms : Int64
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct FlowEntry {
+  id : Int
+  comment : Comment
+  mut kind : Kind
+  mut priority : Double?
+  mut status : JudgeStatus
+  mut pickup_id : Int?
+} derive(ToJson, @debug.Debug)
+
+pub(all) enum IrcMessage {
+  Ping(String)
+  Chat(Comment)
+  Other(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) enum JudgeStatus {
+  Early
+  Pending
+  Judged
+  Inherited
+  Dropped
+  Failed
+} derive(Eq, @debug.Debug)
+pub impl ToJson for JudgeStatus
+
+pub(all) enum Kind {
+  Question
+  Request
+  Feedback
+  Correction
+  Greeting
+  FirstTime
+  Trouble
+  Abuse
+  Chatter
+  Reaction
+  Unjudged
+} derive(Eq, @debug.Debug)
+pub fn Kind::description(Self) -> String
+pub fn Kind::from_key(String) -> Self?
+pub fn Kind::key(Self) -> String
+pub fn Kind::label(Self) -> String
+pub impl ToJson for Kind
+
+pub(all) struct LiveChatPage {
+  comments : Array[Comment]
+  next_page_token : String?
+  polling_interval_ms : Int
+} derive(@debug.Debug)
+
+pub struct Mood {
+  retention_ms : Int64
+  mut events : Array[MoodEvent]
+  mut next_id : Int
+}
+pub fn Mood::new(retention_ms? : Int64) -> Self
+pub fn Mood::prune(Self, Int64) -> Unit
+pub fn Mood::reclassify(Self, Int, Kind) -> Unit
+pub fn Mood::record(Self, Int64, String, Kind, reaction? : String, label? : String) -> Int
+pub fn Mood::size(Self) -> Int
+pub fn Mood::snapshot(Self, Int64, Int64, top? : Int) -> MoodSnapshot
+
+type MoodEvent
+
+pub(all) struct MoodSnapshot {
+  window_ms : Int64
+  total : Int
+  by_kind : Map[String, Int]
+  rate_per_sec : Double
+  participants : Int
+  top_reactions : Array[ReactionCount]
+} derive(ToJson, @debug.Debug)
+
+pub struct Pending {
+  comment : Comment
+  entry : FlowEntry
+  mood_id : Int
+  verdict : BundleVerdict?
+  length : Int
+  at : Int64
+}
+
+pub(all) struct PickupConfig {
+  priority_threshold : Double
+  kind_floor : Double
+  fade_ms : Int64
+  expire_ms : Int64
+} derive(@debug.Debug)
+pub fn PickupConfig::new(priority_threshold? : Double, kind_floor? : Double, fade_ms? : Int64, expire_ms? : Int64) -> Self
+pub fn PickupConfig::should_pick_up(Self, Kind, Double) -> Bool
+
+type PickupItem
+
+pub struct PickupList {
+  config : PickupConfig
+  mut items : Array[PickupItem]
+  mut next_id : Int
+}
+pub fn PickupList::bump(Self, Int) -> Bool
+pub fn PickupList::dismiss(Self, Int) -> Bool
+pub fn PickupList::new(config? : PickupConfig) -> Self
+pub fn PickupList::offer(Self, Comment, Kind, Double, Int64) -> Int?
+pub fn PickupList::prune(Self, Int64) -> Unit
+pub fn PickupList::size(Self) -> Int
+pub fn PickupList::view(Self, Int64) -> Array[PickupView]
+
+pub(all) struct PickupView {
+  id : Int
+  comment : Comment
+  kind : Kind
+  priority : Double
+  at : Int64
+  count : Int
+  faded : Bool
+  pinned : Bool
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct ReactionCount {
+  label : String
+  count : Int
+} derive(Eq, ToJson, @debug.Debug)
+
+pub struct ReactionRules {
+  words : Map[String, Unit]
+}
+pub fn ReactionRules::is_reaction(Self, String, emotes? : Array[String]) -> Bool
+pub fn ReactionRules::new(extra_words? : Array[String]) -> Self
+
+pub(all) enum Token {
+  Text(String)
+  Emote(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Triage {
+  kind : Kind
+  kind_probabilities : Map[String, Double]
+  kind_confidence : Double
+  priority : Double
+  priority_confidence : Double
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Triage::kind_probability(Self, Kind) -> Double
+
+// Type aliases
+
+// Traits
+pub(open) trait Sink {
+  fn on_entry(Self, FlowEntry) -> Unit
+}
+
+pub(open) trait Source {
+  async fn run(Self, async (Comment) -> Unit) -> Unit
+}

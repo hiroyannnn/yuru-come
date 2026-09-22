@@ -1,0 +1,161 @@
+:root {
+  --bg: #14161a;
+  --panel: #1c1f25;
+  --line: #2b3038;
+  --text: #e8eaed;
+  --muted: #8b929c;
+  --accent: #ffd166;
+  --danger: #ff5d5d;
+  --question: #5cc8ff;
+  --request: #b692ff;
+  --feedback: #7ddc8c;
+  --correction: #ffb454;
+  --greeting: #8fa3b8;
+  --first_time: #ff8fc7;
+  --trouble: #ff5d5d;
+  --abuse: #70757d;
+  --chatter: #6f7b8a;
+  --reaction: #4a525e;
+  --unjudged: #3a4049;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.topbar h1 { margin: 0; font-size: 16px; letter-spacing: .04em; color: var(--accent); }
+.context { margin: 0; color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conn { margin: 0; font-size: 12px; color: var(--muted); }
+.conn.down { color: var(--danger); }
+
+.panels {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+
+.panel {
+  background: var(--panel);
+  padding: 12px 16px 16px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.panel h2 { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+.panel h3 { margin: 20px 0 8px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .06em; }
+.sub { font-weight: 400; }
+.count { color: var(--accent); }
+.hint, .empty { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.empty { padding: 16px 0; }
+[hidden] { display: none !important; }
+
+/* 拾うべきコメント */
+.pickup-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pickup {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: #232730;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--kind, var(--muted));
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: block;
+  transition: opacity .4s, background .15s;
+}
+.pickup:hover, .pickup:focus-visible { background: #2a2f3a; outline: none; border-color: var(--kind, var(--muted)); }
+.pickup.faded { opacity: .45; }
+.pickup.pinned { background: #33202a; border-color: var(--danger); }
+.pickup-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.pickup-text { margin-top: 4px; font-size: 18px; line-height: 1.45; overflow-wrap: anywhere; }
+.pickup.pinned .pickup-text { font-weight: 600; }
+.badge {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #14161a;
+  background: var(--kind, var(--muted));
+  white-space: nowrap;
+}
+.priority { font-variant-numeric: tabular-nums; }
+.echo { color: var(--accent); font-weight: 600; }
+.author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 16em; }
+.age { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* いまの空気 */
+.bundles { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-top: 8px; min-height: 48px; }
+.bundle { display: inline-flex; align-items: baseline; gap: 6px; max-width: 100%; }
+.bundle-text { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 12em; }
+.bundle-count { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; }
+.bundle-people { font-size: 11px; color: var(--muted); }
+
+.meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.meter { background: #232730; border-radius: 6px; padding: 8px 10px; }
+.meter-value { display: block; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.meter-label { font-size: 11px; color: var(--muted); }
+
+.kindbar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; background: #232730; }
+.kindbar span { display: block; height: 100%; background: var(--kind); min-width: 2px; }
+.legend { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.legend li::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--kind); margin-right: 4px; }
+.legend b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.queue-track { height: 8px; border-radius: 4px; background: #232730; overflow: hidden; }
+.queue-fill { height: 100%; width: 0; background: var(--feedback); transition: width .3s; }
+.queue-fill.busy { background: var(--correction); }
+.queue-fill.full { background: var(--danger); }
+.queue-text, .stats { margin: 6px 0 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--text); }
+.stats .dropped { color: var(--danger); }
+
+/* 全部の流れ */
+.flow-list { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; }
+.flow-item { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid #22262d; align-items: baseline; }
+.flow-item .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--kind, var(--unjudged)); transform: translateY(-1px); }
+.flow-item .who { flex: none; max-width: 8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.flow-item .body { min-width: 0; overflow-wrap: anywhere; }
+.flow-item.reaction { opacity: .45; }
+.flow-item.pending .dot { background: transparent; border: 1px solid var(--muted); }
+.flow-item.picked .body { color: var(--accent); }
+.flow-item.abuse .body { color: var(--muted); }
+.flow-item.abuse .body button {
+  font: inherit; color: var(--muted); background: none; border: 1px dashed var(--line); border-radius: 4px; padding: 0 6px; cursor: pointer;
+}
+.flow-item .tag { flex: none; margin-left: auto; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+@media (max-width: 900px) {
+  body { height: auto; }
+  .panels { grid-template-columns: minmax(0, 1fr); }
+  .panel { overflow-y: visible; }
+  .flow-list { max-height: 60vh; overflow-y: auto; }
+  .pickup-text { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pickup, .queue-fill { transition: none; }
+}
