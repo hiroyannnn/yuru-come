@@ -71,13 +71,13 @@ async fn start(options : CliOptions) -> Unit {
           )
           return
         }
-        guard @env.get_env_var("YOUTUBE_API_KEY") is Some(api_key) else {
-          println(
-            "--source youtube には環境変数 YOUTUBE_API_KEY が必要です",
-          )
-          return
-        }
-        sources.push(@youtube_source.YouTubeSource::new(video_id, api_key))
+        // キーがあれば Data API、無ければブラウザと同じ経路（innertube）で読む
+        sources.push(
+          @youtube_source.YouTubeSource::new(
+            video_id,
+            api_key?=@env.get_env_var("YOUTUBE_API_KEY"),
+          ),
+        )
       }
       _ => {
         println("未対応の source: \{name}\n\n\{usage}")

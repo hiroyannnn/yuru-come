@@ -30,6 +30,10 @@ pub fn connection_was_healthy(connected_ms~ : Int64, healthy_ms? : Int64) -> Boo
 
 pub let default_reaction_words : Array[String]
 
+pub fn innertube_live_chat_body(InnertubeConfig, String) -> Json
+
+pub fn innertube_live_chat_url(InnertubeConfig) -> String
+
 pub let jev_kinds : Array[Kind]
 
 pub fn live_chat_messages_url(String, String, String?) -> String
@@ -38,11 +42,15 @@ pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[Token]
 
+pub fn parse_get_live_chat(Json) -> LiveChatPage raise YouTubeError
+
 pub fn parse_irc_line(String) -> IrcMessage
 
 pub fn parse_live_chat_id(Json) -> String raise YouTubeError
 
 pub fn parse_live_chat_page(Json) -> LiveChatPage raise YouTubeError
+
+pub fn parse_live_chat_page_html(String) -> InnertubeConfig raise YouTubeError
 
 pub fn parse_replay_line(String) -> (Int64, Comment)?
 
@@ -78,9 +86,10 @@ pub(all) suberror ResponseError {
   UnknownKind(String)
 } derive(Eq, @debug.Debug)
 
-pub suberror YouTubeError {
+pub(all) suberror YouTubeError {
   VideoNotFound
   NotLive
+  ChatUnavailable(String)
   TypeMismatch(String)
 } derive(Eq, @debug.Debug)
 
@@ -215,6 +224,12 @@ pub(all) struct FlowEntry {
   mut status : JudgeStatus
   mut pickup_id : Int?
 } derive(ToJson, @debug.Debug)
+
+pub(all) struct InnertubeConfig {
+  api_key : String
+  client_version : String
+  continuation : String
+} derive(Eq, @debug.Debug)
 
 pub(all) enum IrcMessage {
   Ping(String)
