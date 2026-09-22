@@ -52,7 +52,7 @@ pub fn OpenAiClient::model(self : OpenAiClient) -> String {
 
 ///|
 /// system と user を送って応答本文を返す。
-/// モデルが reasoning_effort を拒否したら外して 1 回だけ再送する。
+/// モデルが reasoning_effort を拒否したら候補を落として送り直す（minimal → none → 送らない）。
 pub async fn OpenAiClient::chat(
   self : OpenAiClient,
   system : String,
@@ -62,15 +62,25 @@ pub async fn OpenAiClient::chat(
     { role: System, content: system, },
     { role: User, content: user, },
   ]
-  self.chat_once(messages) catch {
-    @lib.OpenAiError::BadRequest(..) as err if err.is_unsupported_parameter(
-        "reasoning_effort",
-      ) => {
-      self.reasoning_effort = None
-      self.chat_once(messages)
-    }
-    err => raise err
+  // 拒否されるたびに候補を落として送り直す（minimal → none → 送らない）
+  let mut result : String? = None
+  while result is None {
+    result = Some(
+      self.chat_once(messages) catch {
+        @lib.OpenAiError::BadRequest(..) as err if err.is_unsupported_parameter(
+            "reasoning_effort",
+          ) &&
+          self.reasoning_effort is Some(_) => {
+          self.reasoning_effort = @lib.next_reasoning_effort(
+            self.reasoning_effort,
+          )
+          continue
+        }
+        err => raise err
+      },
+    )
   }
+  result.unwrap()
 }
 
 ///|

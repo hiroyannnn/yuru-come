@@ -52,6 +52,7 @@ pub using @lib {
   type OpenAiError,
   build_chat_request,
   parse_chat_response,
+  next_reasoning_effort,
   parse_stdin_line,
   parse_replay_line,
   replay_delay_ms,

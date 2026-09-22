@@ -60,4 +60,17 @@ test "reasoning_effort をモデルが拒否した 400 を見分ける" {
   )
   assert_true(err.is_unsupported_parameter("reasoning_effort"))
   assert_false(err.is_unsupported_parameter("temperature"))
+  // 値だけを拒否する形（gpt-5.6 系は minimal を受け付けない）
+  let value : @lib.OpenAiError = BadRequest(
+    code=400,
+    message="Unsupported value: 'reasoning_effort' does not support 'minimal' with this model. Supported values are: 'none', 'low', 'medium', 'high', and 'xhigh'.",
+  )
+  assert_true(value.is_unsupported_parameter("reasoning_effort"))
+}
+
+///|
+test "拒否された reasoning_effort の次の候補: minimal → none → 送らない" {
+  assert_eq(@lib.next_reasoning_effort(Some("minimal")), Some("none"))
+  assert_eq(@lib.next_reasoning_effort(Some("none")), None)
+  assert_eq(@lib.next_reasoning_effort(Some("low")), None)
 }

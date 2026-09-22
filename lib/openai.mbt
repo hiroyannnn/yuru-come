@@ -25,7 +25,7 @@ pub impl ToJson for Message with fn to_json(self) {
 
 ///|
 /// OPENAI_MODEL が無いときの既定モデル。
-pub const DEFAULT_OPENAI_MODEL : String = "gpt-5-mini"
+pub const DEFAULT_OPENAI_MODEL : String = "gpt-5.6-luna"
 
 ///|
 pub const DEFAULT_MAX_COMPLETION_TOKENS : Int = 1024
@@ -79,9 +79,22 @@ pub fn OpenAiError::is_unsupported_parameter(
 ) -> Bool {
   match self {
     BadRequest(code=400, message~) =>
-      message.contains("Unsupported parameter") &&
+      (
+        message.contains("Unsupported parameter") ||
+        message.contains("Unsupported value")
+      ) &&
       message.contains("'\{parameter}'")
     _ => false
+  }
+}
+
+///|
+/// モデルが reasoning_effort を拒否したときの次の候補。
+/// gpt-5 系は `minimal`、gpt-5.6 系は `none` が最速。どちらも拒否されたら送らない。
+pub fn next_reasoning_effort(current : String?) -> String? {
+  match current {
+    Some("minimal") => Some("none")
+    _ => None
   }
 }
 

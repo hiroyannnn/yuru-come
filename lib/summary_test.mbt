@@ -97,7 +97,8 @@ test "テンプレートの一文: 束が無ければ反応の部分を省く" {
 test "LLM への入力: 文脈、束、種類の分布、直近の中身のあるコメントを種類つきで並べる" {
   let prompt = @lib.summary_prompt(busy_engine().state(3500))
   assert_true(prompt.system.contains("一文"))
-  assert_true(prompt.system.contains("60"))
+  assert_true(prompt.system.contains("40 字"))
+  assert_true(prompt.system.contains("繰り返さない"))
   assert_true(prompt.user.contains("配信の文脈: Factorio 配信"))
   assert_true(prompt.user.contains("「草」×12"))
   assert_true(prompt.user.contains("指摘 1"))
@@ -153,6 +154,11 @@ test "返ってきた文の整形: 前後の空白・引用符・前置きを除
     "質問が溜まっています。",
   )
   assert_eq(@lib.clean_summary("\"Quiet chat.\""), "Quiet chat.")
+  // 文の途中に引用符があるだけなら触らない
+  assert_eq(
+    @lib.clean_summary("「かわいい」や「きた」と好反応です"),
+    "「かわいい」や「きた」と好反応です",
+  )
   assert_eq(@lib.clean_summary(""), "")
 }
 

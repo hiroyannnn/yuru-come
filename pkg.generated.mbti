@@ -24,6 +24,8 @@ pub fn innertube_live_chat_url(@lib.InnertubeConfig) -> String
 
 pub let jev_kinds : Array[@lib.Kind]
 
+pub fn next_reasoning_effort(String?) -> String?
+
 pub fn normalize(String, emotes? : Array[String]) -> String
 
 pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]

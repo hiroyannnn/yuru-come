@@ -68,7 +68,7 @@ pub fn template_summary(state : EngineState) -> String {
 }
 
 ///|
-pub const SUMMARY_SYSTEM_PROMPT : String = "あなたはライブ配信のチャット欄を横で見ている助手です。渡された情報だけを使って、配信者がいまチャットで起きていることを一目で分かるように、日本語の一文（60 字以内）で伝えてください。コメントに無いことは書かない。前置きや引用符は付けず、文だけを返す。"
+pub const SUMMARY_SYSTEM_PROMPT : String = "あなたはライブ配信のチャット欄を横で見ている助手です。渡された情報だけを使って、配信者がいまチャットで起きていることを、日本語の短い一文（40 字以内）で伝えてください。件数や人数などの数字は画面に出ているので繰り返さない。何が話題か、拾うべきものがあるかを優先する。コメントに無いことは書かない。前置きや引用符は付けず、文だけを返す。"
 
 ///|
 /// LLM への入力。文脈、束、種類の分布、直近の中身のあるコメント（反応・荒らし・未判定を除く）を並べる。
@@ -126,10 +126,26 @@ pub fn clean_summary(text : String) -> String {
     Some(i) => text.trim(chars=" \t\r\n　")[:i].to_owned()
     None => text.trim(chars=" \t\r\n　").to_owned()
   }
-  let mut line = first_line.trim(chars=" \t　\"'「」『』“”").to_owned()
+  let mut line = first_line.trim(chars=" \t　").to_owned()
   for prefix in ["要約:", "要約：", "Summary:"] {
     if line.has_prefix(prefix) {
       line = line[prefix.length():].trim(chars=" 　").to_owned()
+    }
+  }
+  // 全体が引用符で囲まれているときだけ外す（文中の「」はそのまま）
+  for
+    pair in [
+      ("「", "」"),
+      ("『", "』"),
+      ("\"", "\""),
+      ("'", "'"),
+      ("“", "”"),
+    ] {
+    let (open, close) = pair
+    if line.char_length() >= 2 &&
+      line.has_prefix(open) &&
+      line.has_suffix(close) {
+      line = line[open.length():line.length() - close.length()].to_owned()
     }
   }
   if line.char_length() > SUMMARY_MAX_CHARS {

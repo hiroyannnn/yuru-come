@@ -82,6 +82,7 @@ pub async fn summarize_loop(
     guard @lib.summary_needed(state, last_entry_id~) else { continue }
     last_entry_id = state.flow[0].id
     let prompt = @lib.summary_prompt(state)
+    let started = @async.now()
     let text = summarize(prompt.system, prompt.user) catch {
       err => {
         if @async.is_being_cancelled() {
@@ -94,7 +95,7 @@ pub async fn summarize_loop(
     let cleaned = @lib.clean_summary(text)
     if !cleaned.is_empty() {
       engine.set_summary(cleaned, @async.now())
-      log("空気: \{cleaned}")
+      log("空気（\{@async.now() - started}ms）: \{cleaned}")
     }
   }
 }

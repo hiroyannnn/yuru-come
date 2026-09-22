@@ -8,7 +8,7 @@ import {
 // Values
 pub const DEFAULT_MAX_COMPLETION_TOKENS : Int = 1024
 
-pub const DEFAULT_OPENAI_MODEL : String = "gpt-5-mini"
+pub const DEFAULT_OPENAI_MODEL : String = "gpt-5.6-luna"
 
 pub const DEFAULT_POLLING_INTERVAL_MS : Int = 5000
 
@@ -32,7 +32,7 @@ pub const SUMMARY_MAX_CHARS : Int = 80
 
 pub const SUMMARY_STALE_MS : Int64 = 120_000
 
-pub const SUMMARY_SYSTEM_PROMPT : String = "あなたはライブ配信のチャット欄を横で見ている助手です。渡された情報だけを使って、配信者がいまチャットで起きていることを一目で分かるように、日本語の一文（60 字以内）で伝えてください。コメントに無いことは書かない。前置きや引用符は付けず、文だけを返す。"
+pub const SUMMARY_SYSTEM_PROMPT : String = "あなたはライブ配信のチャット欄を横で見ている助手です。渡された情報だけを使って、配信者がいまチャットで起きていることを、日本語の短い一文（40 字以内）で伝えてください。件数や人数などの数字は画面に出ているので繰り返さない。何が話題か、拾うべきものがあるかを優先する。コメントに無いことは書かない。前置きや引用符は付けず、文だけを返す。"
 
 pub fn build_chat_request(String, Array[Message], max_completion_tokens? : Int, reasoning_effort? : String?) -> Json
 
@@ -53,6 +53,8 @@ pub fn innertube_live_chat_url(InnertubeConfig) -> String
 pub let jev_kinds : Array[Kind]
 
 pub fn live_chat_messages_url(String, String, String?) -> String
+
+pub fn next_reasoning_effort(String?) -> String?
 
 pub fn normalize(String, emotes? : Array[String]) -> String
 

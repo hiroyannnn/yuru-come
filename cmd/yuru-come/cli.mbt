@@ -67,7 +67,7 @@ pub let usage : String =
   #|  --pickup-floor <0..2>                 トラブル・質問・リクエスト・指摘・初見を拾うのに求める priority の下限（既定 0.6。0 で種類だけで拾う）
   #|
   #|環境変数: JEV_URL（既定 http://127.0.0.1:8000）、JEV_API_KEY（既定 local）、JEV_MODEL（既定 jev-latest）、YOUTUBE_API_KEY（任意）
-  #|          OPENAI_API_KEY（任意。あれば 30 秒ごとに「いまの空気」を一文にする）、OPENAI_MODEL（既定 gpt-5-mini）
+  #|          OPENAI_API_KEY（任意。あれば 30 秒ごとに「いまの空気」を一文にする）、OPENAI_MODEL（既定 gpt-5.6-luna）
 
 ///|
 /// 引数列（プログラム名を除く）を解釈する。
