@@ -1,5 +1,10 @@
 ///|
 async fn main {
+  // .env があれば、環境変数に無いキーだけ補う（JEV_API_KEY などを export しなくてよい）
+  let loaded = @runtime.load_dotenv()
+  if loaded > 0 {
+    @runtime.log(".env から \{loaded} 件を読み込みました")
+  }
   let options = parse_cli(@env.args()[1:]) catch {
     Help => {
       println(usage)
@@ -105,7 +110,7 @@ async fn start(options : CliOptions) -> Unit {
             engine,
             host=options.host,
             port=options.port,
-            web_dir=options.web_dir,
+            web_dir?=options.web_dir,
             labels_path=options.labels_path,
           ),
         )

@@ -14,7 +14,8 @@ pub(all) struct CliOptions {
   speed : Double
   /// stdin Source の参加者 ID に付けるプレフィックス（外部ブリッジ用）
   stdin_source : String
-  web_dir : String
+  /// 静的ファイルの場所。無ければバイナリに埋め込んだものを使う
+  web_dir : String?
   /// 並行して Jev に投げる本数
   workers : Int
   queue_limit : Int
@@ -60,7 +61,7 @@ pub let usage : String =
   #|  --context <text>                      Jev に渡す配信の文脈（配信タイトルや話題）
   #|  --port <n>                            ダッシュボードのポート（既定 8791）
   #|  --host <addr>                         ダッシュボードの待ち受けアドレス（既定 127.0.0.1）
-  #|  --web-dir <dir>                       静的ファイルの場所（既定 web）
+  #|  --web-dir <dir>                       静的ファイルの場所（既定はバイナリに埋め込んだもの。web/ を編集しながら試すとき用）
   #|  --workers <n>                         並行して Jev に投げる本数（既定 2）
   #|  --queue-limit <n>                     Jev 待ちキューの上限（既定 50）
   #|  --window <sec>                        反応を束ねる時間窓（既定 30）
@@ -89,7 +90,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
   let mut replay_path : String? = None
   let mut speed = 1.0
   let mut stdin_source = "stdin"
-  let mut web_dir = "web"
+  let mut web_dir : String? = None
   let mut workers = 2
   let mut queue_limit = 50
   let mut window_sec = 30
@@ -149,7 +150,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
         }
       }
       "--stdin-source" => stdin_source = value()
-      "--web-dir" => web_dir = value()
+      "--web-dir" => web_dir = Some(value())
       "--workers" => workers = positive_value()
       "--queue-limit" => {
         let text = value()

@@ -1,6 +1,7 @@
 import {
   "hiroyannnn/yuru-come/lib",
   "hiroyannnn/yuru-come/jev",
+  "hiroyannnn/yuru-come/runtime",
   "moonbitlang/core/env",
   "moonbitlang/core/string",
   "moonbitlang/async",

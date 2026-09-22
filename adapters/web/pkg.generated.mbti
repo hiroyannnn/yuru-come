@@ -14,7 +14,7 @@ pub struct WebServer {
   engine : @lib.Engine
   host : String
   port : Int
-  web_dir : String
+  web_dir : String?
   labels_path : String
 }
 pub fn WebServer::new(@lib.Engine, host? : String, port? : Int, web_dir? : String, labels_path? : String) -> Self

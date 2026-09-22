@@ -34,7 +34,7 @@ pub(all) struct CliOptions {
   replay_path : String?
   speed : Double
   stdin_source : String
-  web_dir : String
+  web_dir : String?
   workers : Int
   queue_limit : Int
   window_sec : Int
