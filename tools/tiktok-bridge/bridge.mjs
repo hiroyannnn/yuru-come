@@ -15,7 +15,7 @@ if (!uniqueId) {
   process.exit(1);
 }
 
-const connection = new TikTokLiveConnection(uniqueId);
+const connection = new TikTokLiveConnection(uniqueId, {});
 
 // TAB と改行は区切りに使うので、空白に置き換える
 const clean = (text) => String(text ?? "").replace(/[\t\r\n]+/g, " ").trim();
