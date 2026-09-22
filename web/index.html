@@ -10,12 +10,13 @@
   <header class="topbar">
     <h1>yuru-come</h1>
     <p class="context" id="context"></p>
+    <button class="details-toggle" id="details-toggle" type="button" aria-pressed="false">詳細</button>
     <p class="conn" id="conn" role="status">接続中…</p>
   </header>
   <main class="panels">
     <section class="panel pickups" aria-labelledby="pickups-title">
       <h2 id="pickups-title">気になるコメント <span class="count" id="pickup-count"></span></h2>
-      <p class="hint">拾うならこのあたり。クリックで既読。5 分で薄くなり、10 分で消えます。</p>
+      <p class="hint">読んだらクリックで消えます。× はスルー。放っておいても 10 分で消えます。</p>
       <ol class="pickup-list" id="pickups"></ol>
       <p class="empty" id="pickups-empty">いまは拾うものがありません。全部読まなくて大丈夫。</p>
     </section>
@@ -36,12 +37,12 @@
       <div class="kindbar" id="kindbar" role="img" aria-label="種類の分布"></div>
       <ul class="legend" id="legend"></ul>
 
-      <h3>Jev</h3>
-      <div class="queue">
+      <h3 class="details">Jev</h3>
+      <div class="queue details">
         <div class="queue-track"><div class="queue-fill" id="queue-fill"></div></div>
         <p class="queue-text" id="queue-text"></p>
       </div>
-      <p class="stats" id="stats"></p>
+      <p class="stats details" id="stats"></p>
     </section>
 
     <section class="panel flow" aria-labelledby="flow-title">

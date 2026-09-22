@@ -15,8 +15,9 @@ pub struct WebServer {
   host : String
   port : Int
   web_dir : String
+  labels_path : String
 }
-pub fn WebServer::new(@lib.Engine, host? : String, port? : Int, web_dir? : String) -> Self
+pub fn WebServer::new(@lib.Engine, host? : String, port? : Int, web_dir? : String, labels_path? : String) -> Self
 pub async fn WebServer::serve(Self) -> Unit
 
 // Type aliases

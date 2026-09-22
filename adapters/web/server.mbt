@@ -3,12 +3,16 @@
 ///
 /// - `GET /`            3 枠の画面（`/api/state` を 1 秒ごとにポーリング）
 /// - `GET /api/state`   エンジンの全状態
-/// - `POST /api/dismiss` `{"id": <拾い上げの項目 ID>}` を既読にする
+/// - `POST /api/dismiss` `{"id": <項目 ID>, "action": "picked"|"skipped"}` 気になるコメントを消し、正解データとして記録する
+///
+/// 正解データ（拾った・スルー・期限切れ）は `labels_path` に JSONL で追記する。
 pub struct WebServer {
   engine : @lib.Engine
   host : String
   port : Int
   web_dir : String
+  /// 正解データの追記先。空なら書かない
+  labels_path : String
 }
 
 ///|
@@ -17,8 +21,9 @@ pub fn WebServer::new(
   host? : String = "127.0.0.1",
   port? : Int = 8791,
   web_dir? : String = "web",
+  labels_path? : String = "labels.jsonl",
 ) -> WebServer {
-  { engine, host, port, web_dir, }
+  { engine, host, port, web_dir, labels_path, }
 }
 
 ///|
@@ -51,8 +56,11 @@ async fn WebServer::handle(
       self.send_static(conn, "style.css", "text/css; charset=utf-8")
     (Get, "/app.js") =>
       self.send_static(conn, "app.js", "text/javascript; charset=utf-8")
-    (Get, "/api/state") =>
-      send_json(conn, 200, self.engine.state(@async.now()).to_json())
+    (Get, "/api/state") => {
+      let state = self.engine.state(@async.now())
+      self.flush_labels()
+      send_json(conn, 200, state.to_json())
+    }
     (Post, "/api/dismiss") => self.handle_dismiss(body, conn)
     (Get, "/favicon.ico") => conn.send_response(204, "No Content")
     _ => send_json(conn, 404, { "error": "not found" })
@@ -68,10 +76,27 @@ async fn WebServer::handle_dismiss(
   let json = @json.parse(body.read_all().text()) catch {
     _ => return send_json(conn, 400, { "error": "JSON が不正です" })
   }
-  guard json is Object({ "id": Number(id, ..), .. }) else {
+  guard json is Object({ "id": Number(id, ..), .. } as body) else {
     return send_json(conn, 400, { "error": "id が必要です" })
   }
-  send_json(conn, 200, { "ok": self.engine.dismiss(id.to_int()) })
+  let outcome : @lib.PickupOutcome = match body.get("action") {
+    Some(String("skipped")) => Skipped
+    _ => Picked
+  }
+  let ok = self.engine.resolve_pickup(id.to_int(), outcome, @async.now())
+  self.flush_labels()
+  send_json(conn, 200, { "ok": ok })
+}
+
+///|
+/// 溜まった正解データを JSONL で追記する。失敗はログに出すだけ。
+async fn WebServer::flush_labels(self : WebServer) -> Unit {
+  let labels = self.engine.take_labels()
+  guard !labels.is_empty() && !self.labels_path.is_empty() else { return }
+  let lines = labels.map(label => label.to_json().stringify()).join("\n") + "\n"
+  @fs.write_file(self.labels_path, lines, append=true, create_mode=OpenOrCreate) catch {
+    err => @runtime.log("web: \{self.labels_path} に書けません: \{err}")
+  }
 }
 
 ///|

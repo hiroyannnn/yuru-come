@@ -27,6 +27,8 @@ pub(all) struct CliOptions {
   priority_threshold : Double
   /// 拾うべき種類に求める priority の下限
   pickup_floor : Double
+  /// 正解データ（拾った・スルー・期限切れ）の追記先。空なら書かない
+  labels_path : String
 } derive(Debug)
 
 ///|
@@ -65,6 +67,7 @@ pub let usage : String =
   #|  --reaction-word <word>                早期判定の辞書に足す語（複数指定可）
   #|  --priority-threshold <0..2>           この priority 以上なら種類によらず拾う（既定 1.5。2 より大きくすると種類だけで拾う）
   #|  --pickup-floor <0..2>                 トラブル・質問・リクエスト・指摘・初見を拾うのに求める priority の下限（既定 0.6。0 で種類だけで拾う）
+  #|  --labels <file.jsonl>                 気になるコメントを配信者がどうしたか（拾った/スルー/期限切れ）の記録先（既定 labels.jsonl。空文字で書かない）
   #|
   #|環境変数: JEV_URL（既定 http://127.0.0.1:8000）、JEV_API_KEY（既定 local）、JEV_MODEL（既定 jev-latest）、YOUTUBE_API_KEY（任意）
   #|          OPENAI_API_KEY（任意。あれば 30 秒ごとに「いまの空気」を一文にする）、OPENAI_MODEL（既定 gpt-5.6-luna）
@@ -91,6 +94,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
   let mut metric : @lib.BundleMetric = NormalizedLevenshtein
   let mut priority_threshold = 1.5
   let mut pickup_floor = 0.6
+  let mut labels_path = "labels.jsonl"
   let mut i = 0
   while i < args.length() {
     let flag = args[i]
@@ -163,6 +167,7 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
       "--reaction-word" => reaction_words.push(value())
       "--priority-threshold" => priority_threshold = double_value()
       "--pickup-floor" => pickup_floor = double_value()
+      "--labels" => labels_path = value()
       _ => raise UnknownOption(flag)
     }
     i += 1
@@ -195,5 +200,6 @@ pub fn parse_cli(args : ArrayView[String]) -> CliOptions raise CliError {
     reaction_words,
     priority_threshold,
     pickup_floor,
+    labels_path,
   }
 }

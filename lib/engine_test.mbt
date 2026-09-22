@@ -407,11 +407,19 @@ test "キューを間引くとき、疑問符つきとトラブルらしいコ�
   let engine = @lib.Engine::new(config=@lib.EngineConfig::new(queue_limit=3))
   engine.ingest(viewer("a", "音出てない"), 0)
   engine.ingest(viewer("b", "これ何？"), 10)
-  engine.ingest(viewer("c", "今日は仕事が終わってから来ました"), 20)
-  engine.ingest(viewer("d", "あふれさせる四番目の長いコメント"), 30)
+  engine.ingest(
+    viewer("c", "今日は仕事が終わってから来ました"),
+    20,
+  )
+  engine.ingest(
+    viewer("d", "あふれさせる四番目の長いコメント"),
+    30,
+  )
   let dropped = engine.state(30).flow.filter(entry => entry.status == Dropped)
   // いちばん短いのは「これ何？」と「音出てない」だが、疑問符つきとトラブルらしいものは残す
-  assert_eq(dropped.map(entry => entry.comment.text), ["今日は仕事が終わってから来ました"])
+  assert_eq(dropped.map(entry => entry.comment.text), [
+    "今日は仕事が終わってから来ました",
+  ])
 }
 
 ///|
@@ -420,4 +428,17 @@ test "後回しにする候補しか無ければ、その中でいちばん短�
   engine.ingest(viewer("a", "これ何？"), 0)
   engine.ingest(viewer("b", "それ何？？？"), 10)
   assert_eq(engine.state(10).stats.dropped, 1)
+}
+
+///|
+test "エンジン経由でも拾った・スルーの記録を取り出せる" {
+  let engine = @lib.Engine::new()
+  engine.ingest(viewer("a", "これ何のゲームですか？"), 0)
+  judge_all(engine, 100) |> ignore
+  let id = engine.state(100).pickups[0].id
+  assert_true(engine.resolve_pickup(id, Skipped, 200))
+  let labels = engine.take_labels()
+  assert_eq(labels.length(), 1)
+  assert_eq(labels[0].outcome, Skipped)
+  assert_eq(labels[0].comment.author, "a")
 }

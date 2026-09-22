@@ -95,6 +95,7 @@ async fn start(options : CliOptions) -> Unit {
             host=options.host,
             port=options.port,
             web_dir=options.web_dir,
+            labels_path=options.labels_path,
           ),
         )
       "terminal" => engine.add_sink(@terminal_sink.TerminalSink::new())

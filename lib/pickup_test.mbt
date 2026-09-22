@@ -86,6 +86,57 @@ test "並びは trouble が最上位、次に priority の高い順、同じな�
 }
 
 ///|
+test "拾った・スルーした・期限切れの記録が、コメントと判定つきで残る" {
+  let list = @lib.PickupList::new()
+  guard list.offer(say("これ何のゲーム？"), Question, 1.2, 0)
+    is Some(picked) else {
+    fail("拾われなかった")
+  }
+  guard list.offer(say("次は〜やって"), Request, 0.9, 10) is Some(skipped) else {
+    fail("拾われなかった")
+  }
+  list.offer(say("初見です"), FirstTime, 1.4, 20) |> ignore
+  assert_true(list.resolve(picked, Picked, 1000))
+  assert_true(list.resolve(skipped, Skipped, 2000))
+  list.view(700_000) |> ignore
+  let labels = list.take_labels()
+  assert_eq(labels.map(l => (l.comment.text, l.kind, l.outcome)), [
+    ("これ何のゲーム？", Question, Picked),
+    ("次は〜やって", Request, Skipped),
+    ("初見です", FirstTime, Expired),
+  ])
+  assert_eq(labels[0].priority, 1.2)
+  assert_eq(labels[0].offered_at, 0)
+  assert_eq(labels[0].resolved_at, 1000)
+  // 取り出したら空になる
+  assert_eq(list.take_labels(), [])
+}
+
+///|
+test "dismiss は「拾った」として記録する" {
+  let list = @lib.PickupList::new()
+  guard list.offer(say("a"), Question, 1.0, 0) is Some(id) else {
+    fail("拾われなかった")
+  }
+  assert_true(list.dismiss(id))
+  assert_eq(list.take_labels().map(l => l.outcome), [Picked])
+}
+
+///|
+test "記録は JSON にできる" {
+  let list = @lib.PickupList::new()
+  guard list.offer(say("a"), Question, 1.0, 0) is Some(id) else {
+    fail("拾われなかった")
+  }
+  list.resolve(id, Skipped, 5) |> ignore
+  guard list.take_labels()[0].to_json() is Object(root) else {
+    fail("object でない")
+  }
+  assert_eq(root.get("outcome"), Some(Json::string("skipped")))
+  assert_eq(root.get("kind"), Some(Json::string("question")))
+}
+
+///|
 test "既読にした項目は消える" {
   let list = @lib.PickupList::new()
   guard list.offer(say("これ何のゲーム？"), Question, 1.2, 0)

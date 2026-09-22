@@ -318,8 +318,8 @@ fn worth_keeping(comment : Comment) -> Bool {
 ///|
 /// 配信トラブルの報告によく出る語。間引きの優先順位にだけ使う（判定は Jev がする）。
 let trouble_hints : Array[String] = [
-  "音", "声", "マイク", "画面", "映像", "配信", "止ま", "固ま", "落ち", "聞こえ", "見えな", "カク",
-  "ラグ", "遅延", "ノイズ",
+  "音", "声", "マイク", "画面", "映像", "配信", "止ま", "固ま", "落ち",
+  "聞こえ", "見えな", "カク", "ラグ", "遅延", "ノイズ",
 ]
 
 ///|
@@ -330,8 +330,10 @@ fn pick_victim(candidates : ArrayView[Pending]) -> Int {
     let keep_current = worth_keeping(candidates[victim].comment)
     let keep_candidate = worth_keeping(candidates[i].comment)
     if (keep_current && !keep_candidate) ||
-      (keep_current == keep_candidate &&
-      candidates[i].length < candidates[victim].length) {
+      (
+        keep_current == keep_candidate &&
+        candidates[i].length < candidates[victim].length
+      ) {
       victim = i
     }
   }
@@ -548,4 +550,21 @@ pub fn Engine::state(
     _ => { text: template_summary(state), source: "template", at: now, }
   }
   { ..state, summary, }
+}
+
+///|
+/// 気になるコメントを配信者がどうしたかを記録して消す。
+pub fn Engine::resolve_pickup(
+  self : Engine,
+  pickup_id : Int,
+  outcome : PickupOutcome,
+  now : Int64,
+) -> Bool {
+  self.pickup.resolve(pickup_id, outcome, now)
+}
+
+///|
+/// 溜まった正解データ（拾った・スルー・期限切れ）を取り出す。
+pub fn Engine::take_labels(self : Engine) -> Array[PickupLabel] {
+  self.pickup.take_labels()
 }

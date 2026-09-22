@@ -43,6 +43,7 @@ pub(all) struct CliOptions {
   reaction_words : Array[String]
   priority_threshold : Double
   pickup_floor : Double
+  labels_path : String
 } derive(@debug.Debug)
 
 // Type aliases
