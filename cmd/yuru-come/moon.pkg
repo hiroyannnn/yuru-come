@@ -2,6 +2,7 @@ import {
   "hiroyannnn/yuru-come/lib",
   "hiroyannnn/yuru-come/runtime",
   "hiroyannnn/yuru-come/jev",
+  "hiroyannnn/yuru-come/llm",
   "hiroyannnn/yuru-come/adapters/stdin" @stdin_source,
   "hiroyannnn/yuru-come/adapters/replay" @replay_source,
   "hiroyannnn/yuru-come/adapters/terminal" @terminal_sink,

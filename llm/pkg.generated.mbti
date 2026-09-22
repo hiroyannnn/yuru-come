@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/llm"
+
+// Values
+pub const DEFAULT_BASE_URL : String = "https://api.openai.com/v1"
+
+// Errors
+
+// Types and methods
+pub struct OpenAiClient {
+  base_url : String
+  api_key : String
+  model : String
+  mut reasoning_effort : String?
+}
+pub async fn OpenAiClient::chat(Self, String, String) -> String
+pub fn OpenAiClient::from_env() -> Self?
+pub fn OpenAiClient::model(Self) -> String
+pub fn OpenAiClient::new(api_key~ : String, model? : String, base_url? : String) -> Self
+pub fn OpenAiClient::summarize_fn(Self) -> async (String, String) -> String
+
+// Type aliases
+
+// Traits

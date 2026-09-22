@@ -199,3 +199,63 @@ async test "複数の Source を同時に走らせる" {
   ])
   assert_eq(engine.state(@async.now()).stats.received, 3)
 }
+
+///|
+async test "要約ループは間隔ごとに LLM を呼び、結果を Engine に書く。新しいコメントが無ければ呼ばない" {
+  let engine = @lib.Engine::new()
+  let calls : Array[String] = []
+  let summarize : async (String, String) -> String = (_system, user) => {
+    calls.push(user)
+    "  「質問が来ています。」\n"
+  }
+  engine.ingest(
+    @lib.Comment::new("test:a", "これ何のゲームですか？", author="a"),
+    @async.now(),
+  )
+  // 判定済みにしておく（未判定のコメントは LLM に見せない）
+  guard engine.take_next() is Some(pending) else {
+    fail("判定待ちがない")
+  }
+  engine.complete(pending, Some(triage(Question, 1.2)), @async.now())
+  @async.with_task_group(group => {
+    group.spawn_bg(() => {
+      @runtime.summarize_loop(engine, summarize, interval_ms=30)
+    })
+    @async.sleep(100)
+    group.return_immediately(())
+  })
+  // 最初の 1 回だけ呼ばれ、以降は新しいコメントが無いので呼ばれない
+  assert_eq(calls.length(), 1)
+  assert_true(calls[0].contains("これ何のゲームですか？"))
+  let summary = engine.state(@async.now()).summary
+  assert_eq(summary.source, "llm")
+  assert_eq(summary.text, "質問が来ています。")
+}
+
+///|
+async test "要約が失敗しても落ちずに次の周期に進む" {
+  let engine = @lib.Engine::new()
+  let calls = Ref(0)
+  let summarize : async (String, String) -> String = (_system, _user) => {
+    calls.val += 1
+    raise Boom
+  }
+  engine.ingest(
+    @lib.Comment::new("test:a", "何か話しています", author="a"),
+    @async.now(),
+  )
+  @async.with_task_group(group => {
+    group.spawn_bg(() => {
+      @runtime.summarize_loop(engine, summarize, interval_ms=20)
+    })
+    @async.sleep(50)
+    engine.ingest(
+      @lib.Comment::new("test:b", "別の話をしています", author="b"),
+      @async.now(),
+    )
+    @async.sleep(50)
+    group.return_immediately(())
+  })
+  assert_eq(calls.val, 2)
+  assert_eq(engine.state(@async.now()).summary.source, "template")
+}

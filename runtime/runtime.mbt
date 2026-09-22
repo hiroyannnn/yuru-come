@@ -65,3 +65,36 @@ pub async fn run(
 pub async fn log(message : String) -> Unit {
   @stdio.stderr.write("[yuru-come] \{message}\n")
 }
+
+///|
+/// 「いまの空気」の一文を LLM に書かせるループ。`interval_ms` ごとに、前回から新しいコメントが来ていれば呼ぶ。
+/// 失敗はログに出して次の周期に進む（画面はテンプレートの一文に戻る）。戻らない。
+pub async fn summarize_loop(
+  engine : @lib.Engine,
+  summarize : async (String, String) -> String,
+  interval_ms? : Int = 30_000,
+) -> Unit {
+  let mut last_entry_id = 0
+  while true {
+    @async.sleep(interval_ms)
+    let now = @async.now()
+    let state = engine.state(now)
+    guard @lib.summary_needed(state, last_entry_id~) else { continue }
+    last_entry_id = state.flow[0].id
+    let prompt = @lib.summary_prompt(state)
+    let text = summarize(prompt.system, prompt.user) catch {
+      err => {
+        if @async.is_being_cancelled() {
+          raise err
+        }
+        log("要約に失敗: \{err}")
+        continue
+      }
+    }
+    let cleaned = @lib.clean_summary(text)
+    if !cleaned.is_empty() {
+      engine.set_summary(cleaned, @async.now())
+      log("空気: \{cleaned}")
+    }
+  }
+}

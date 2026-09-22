@@ -18,6 +18,15 @@ License: Apache License, Version 2.0
   - eval/ (the metrics are modelled on yuru-poll's eval/run.py)
 
 --------------------------------------------------------------------------------
+Portions of this product are copied from hiroyannnn/plutchik-chat
+https://github.com/hiroyannnn/plutchik-chat
+Copyright 2026 hiroyannnn
+License: Apache License, Version 2.0
+
+  - lib/openai.mbt (chat/completions request builder, response parser, error type)
+  - llm/client.mbt (HTTP client)
+
+--------------------------------------------------------------------------------
 This product depends on the following third-party MoonBit packages.
 
 hiroyannnn/strsim (string similarity; normalized Levenshtein and Jaro-Winkler
