@@ -134,3 +134,58 @@ test "--promos で商品の一覧ファイルを指定できる（既定は無�
   assert_eq(parse([]).promos_path, None)
   assert_eq(parse(["--promos", "promos.json"]).promos_path, Some("promos.json"))
 }
+
+///|
+test "設定ファイル（yuru-come.json）の値を既定として使い、CLI が上書きする" {
+  let json : Json = {
+    "sources": ["twitch"],
+    "twitch": ["alice", "bob"],
+    "context": "雑談配信",
+    "port": 9000,
+    "promos": "promos.json",
+    "labels": "",
+    "priority_threshold": 2.1,
+    "pickup_floor": 0.8,
+    "workers": 4,
+    "reaction_words": ["てぇてぇ"],
+  }
+  let defaults = CliOptions::from_json(json)
+  assert_eq(defaults.sources, ["twitch"])
+  assert_eq(defaults.twitch_channels, ["alice", "bob"])
+  assert_eq(defaults.context, "雑談配信")
+  assert_eq(defaults.port, 9000)
+  assert_eq(defaults.promos_path, Some("promos.json"))
+  assert_eq(defaults.labels_path, "")
+  assert_eq(defaults.priority_threshold, 2.1)
+  assert_eq(defaults.pickup_floor, 0.8)
+  assert_eq(defaults.workers, 4)
+  assert_eq(defaults.reaction_words, ["てぇてぇ"])
+  let options = parse_cli(["--port", "8791", "--twitch", "carol"][:], defaults~)
+  assert_eq(options.port, 8791)
+  assert_eq(options.context, "雑談配信")
+  // 複数指定できる項目は、CLI で指定したら設定ファイルの分は使わない
+  assert_eq(options.twitch_channels, ["carol"])
+}
+
+///|
+test "設定ファイルの型が違えば ConfigError" {
+  let bad : Json = { "port": "eight" }
+  try CliOptions::from_json(bad) catch {
+    e => assert_eq(e, ConfigError::Invalid("port"))
+  } noraise {
+    _ => fail("失敗するはず")
+  }
+  let bad_list : Json = { "twitch": "alice" }
+  try CliOptions::from_json(bad_list) catch {
+    e => assert_eq(e, ConfigError::Invalid("twitch"))
+  } noraise {
+    _ => fail("失敗するはず")
+  }
+}
+
+///|
+test "--config で設定ファイルの場所を変えられ、--version は Version を返す" {
+  assert_eq(parse([]).config_path, "yuru-come.json")
+  assert_eq(parse(["--config", "c.json"]).config_path, "c.json")
+  assert_true(parse_error(["--version"]) is Some(Version))
+}

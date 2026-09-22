@@ -10,6 +10,7 @@ import {
   "hiroyannnn/yuru-come/adapters/youtube" @youtube_source,
   "hiroyannnn/yuru-come/adapters/web" @web_adapter,
   "moonbitlang/core/env",
+  "moonbitlang/core/json",
   "moonbitlang/core/string",
   "moonbitlang/async",
   "moonbitlang/async/fs",

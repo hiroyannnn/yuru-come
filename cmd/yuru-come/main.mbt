@@ -1,13 +1,28 @@
 ///|
 async fn main {
-  // .env があれば、環境変数に無いキーだけ補う（JEV_API_KEY などを export しなくてよい）
-  let loaded = @runtime.load_dotenv()
-  if loaded > 0 {
-    @runtime.log(".env から \{loaded} 件を読み込みました")
+  let args = @env.args()[1:]
+  // 設定ファイル（--config か既定の yuru-come.json）があれば、その値を既定にする
+  let config_path = config_path_of(args)
+  let defaults = match load_config(config_path) {
+    Ok(Some(defaults)) => {
+      @runtime.log("設定を \{config_path} から読み込みました")
+      defaults
+    }
+    Ok(None) => CliOptions::default()
+    Err(message) => {
+      println(
+        "設定ファイル \{config_path} を読めません: \{message}",
+      )
+      return
+    }
   }
-  let options = parse_cli(@env.args()[1:]) catch {
+  let options = parse_cli(args, defaults~) catch {
     Help => {
       println(usage)
+      return
+    }
+    Version => {
+      println("yuru-come \{VERSION}")
       return
     }
     err => {
@@ -15,9 +30,36 @@ async fn main {
       return
     }
   }
+  // .env があれば、環境変数に無いキーだけ補う（JEV_API_KEY などを export しなくてよい）
+  let loaded = @runtime.load_dotenv()
+  if loaded > 0 {
+    @runtime.log(".env から \{loaded} 件を読み込みました")
+  }
   start(options) catch {
     err => println("エラー: \{err}")
   }
+}
+
+///|
+/// `--config <path>` があればその値、無ければ既定の場所。
+fn config_path_of(args : ArrayView[String]) -> String {
+  for i in 0..<args.length() {
+    if args[i] == "--config" && i + 1 < args.length() {
+      return args[i + 1]
+    }
+  }
+  DEFAULT_CONFIG_PATH
+}
+
+///|
+/// 設定ファイルを読む。無ければ None、壊れていれば Err。
+async fn load_config(path : String) -> Result[CliOptions?, String] {
+  let text = @fs.read_file(path).text() catch { _ => return Ok(None) }
+  let json = @json.parse(text) catch { err => return Err(err.to_string()) }
+  let options = CliOptions::from_json(json) catch {
+    err => return Err("\{Repr(err)}")
+  }
+  Ok(Some(options))
 }
 
 ///|
