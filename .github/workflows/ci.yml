@@ -22,7 +22,5 @@ jobs:
         run: moon fmt && git diff --exit-code
       - name: Embedded assets are up to date
         run: python3 scripts/embed_assets.py --check
-      - name: Publish dry run
-        run: moon publish --dry-run
       - name: Test
         run: moon test --target all

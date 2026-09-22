@@ -44,6 +44,8 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    env:
+      MOON_TOKEN: ${{ secrets.MOON_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Install MoonBit
@@ -55,9 +57,7 @@ jobs:
       - name: Test
         run: moon test --target all
       - name: Publish to mooncakes.io
-        if: ${{ secrets.MOON_TOKEN != '' }}
-        env:
-          MOON_TOKEN: ${{ secrets.MOON_TOKEN }}
+        if: ${{ env.MOON_TOKEN != '' }}
         run: |
           mkdir -p ~/.moon
           echo "{\"token\":\"${MOON_TOKEN}\",\"username\":\"hiroyannnn\"}" > ~/.moon/credentials.json
