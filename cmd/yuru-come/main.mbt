@@ -1,5 +1,6 @@
 ///|
 async fn main {
+  @sources.set_log_prefix("yuru-come")
   let args = @env.args()[1:]
   // 設定ファイル（--config か既定の yuru-come.json）があれば、その値を既定にする
   let config_path = config_path_of(args)
@@ -93,13 +94,11 @@ async fn start(options : CliOptions) -> Unit {
       ),
     ),
   )
-  let sources : Array[&@lib.Source] = []
+  let sources : Array[&@lib.ChatSource] = []
   for name in options.sources {
     match name {
       "stdin" =>
-        sources.push(
-          @stdin_source.StdinSource::new(source=options.stdin_source),
-        )
+        sources.push(@sources.StdinSource::new(source=options.stdin_source))
       "replay" => {
         guard options.replay_path is Some(path) else {
           println(
@@ -119,7 +118,7 @@ async fn start(options : CliOptions) -> Unit {
           return
         }
         for channel in options.twitch_channels {
-          sources.push(@twitch_source.TwitchSource::new(channel))
+          sources.push(@sources.TwitchSource::new(channel))
         }
       }
       "youtube" => {
@@ -131,7 +130,7 @@ async fn start(options : CliOptions) -> Unit {
         }
         // キーがあれば Data API、無ければブラウザと同じ経路（innertube）で読む
         sources.push(
-          @youtube_source.YouTubeSource::new(
+          @sources.YouTubeSource::new(
             video_id,
             api_key?=@env.get_env_var("YOUTUBE_API_KEY"),
           ),

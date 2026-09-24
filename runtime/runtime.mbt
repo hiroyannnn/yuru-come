@@ -9,7 +9,7 @@
 pub async fn run(
   engine : @lib.Engine,
   judge : async (String, @lib.Comment) -> @lib.Triage,
-  sources : Array[&@lib.Source],
+  sources : Array[&@lib.ChatSource],
   workers? : Int = 2,
   judge_timeout_ms? : Int = 10_000,
 ) -> Unit {
@@ -61,9 +61,9 @@ pub async fn run(
 }
 
 ///|
-/// 標準エラー出力に 1 行書く（標準出力はターミナル Sink が使うので分ける）。
+/// 標準エラー出力に 1 行書く。yuru-kit の接続と同じロガーを使う（先頭の名前は main が設定する）。
 pub async fn log(message : String) -> Unit {
-  @stdio.stderr.write("[yuru-come] \{message}\n")
+  @sources.log(message)
 }
 
 ///|
@@ -101,16 +101,7 @@ pub async fn summarize_loop(
 }
 
 ///|
-/// カレントディレクトリの `.env` を読み、まだ無い環境変数だけを補う。無ければ何もしない。
-/// 読めた件数（補ったキーの数）を返す。
+/// カレントディレクトリの `.env` を読み、まだ無い環境変数だけを補う（yuru-kit に任せる）。
 pub async fn load_dotenv(path? : String = ".env") -> Int {
-  let text = @fs.read_file(path).text() catch { _ => return 0 }
-  let mut loaded = 0
-  for key, value in @lib.parse_dotenv(text) {
-    if @env.get_env_var(key) is None {
-      @env.set_env_var(key, value)
-      loaded += 1
-    }
-  }
-  loaded
+  @sources.load_dotenv(path~)
 }

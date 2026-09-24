@@ -36,5 +36,5 @@ description = "Loose comment viewer: bundles duplicate live-chat reactions and s
 import {
   "moonbitlang/async@0.22.1",
   "hiroyannnn/strsim@0.2.0",
-  "naoto24kawa/moonqr@0.2.0",
+  "hiroyannnn/yuru-kit@0.1.0",
 }

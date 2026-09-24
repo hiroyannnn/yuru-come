@@ -2,7 +2,7 @@
 package "hiroyannnn/yuru-come/adapters/replay"
 
 import {
-  "hiroyannnn/yuru-come/lib",
+  "hiroyannnn/yuru-kit/lib",
 }
 
 // Values
@@ -15,7 +15,7 @@ pub struct ReplaySource {
   speed : Double
 }
 pub fn ReplaySource::new(String, speed? : Double) -> Self
-pub impl @lib.Source for ReplaySource
+pub impl @lib.ChatSource for ReplaySource
 
 // Type aliases
 

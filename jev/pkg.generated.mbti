@@ -2,33 +2,25 @@
 package "hiroyannnn/yuru-come/jev"
 
 import {
-  "hiroyannnn/yuru-come/lib",
   "moonbitlang/core/debug",
 }
 
 // Values
-pub const DEFAULT_API_KEY : String = "local"
-
-pub const DEFAULT_URL : String = "http://127.0.0.1:8000"
 
 // Errors
 pub suberror JevError {
-  HttpStatus(Int, String)
-  InvalidJson(String)
-  BadResponse(@lib.ResponseError)
+  BadResponse(@hiroyannnn/yuru-come/lib.ResponseError)
 } derive(@debug.Debug)
 pub impl Show for JevError
 
 // Types and methods
 pub struct JevClient {
-  base_url : String
-  api_key : String
-  model : String
+  transport : @hiroyannnn/yuru-kit/jev.JevClient
 }
 pub fn JevClient::from_env() -> Self
-pub async fn JevClient::judge(Self, String, @lib.Comment) -> @lib.Triage
-pub fn JevClient::judge_fn(Self) -> async (String, @lib.Comment) -> @lib.Triage
-pub fn JevClient::new(base_url? : String, api_key? : String, model? : String) -> Self
+pub async fn JevClient::judge(Self, String, @hiroyannnn/yuru-kit/lib.Comment) -> @hiroyannnn/yuru-come/lib.Triage
+pub fn JevClient::judge_fn(Self) -> async (String, @hiroyannnn/yuru-kit/lib.Comment) -> @hiroyannnn/yuru-come/lib.Triage
+pub fn JevClient::new(@hiroyannnn/yuru-kit/jev.JevClient) -> Self
 
 // Type aliases
 

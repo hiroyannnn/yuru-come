@@ -12,7 +12,7 @@ pub fn ReplaySource::new(path : String, speed? : Double = 1.0) -> ReplaySource {
 }
 
 ///|
-pub impl @lib.Source for ReplaySource with fn run(self, submit) {
+pub impl @lib.ChatSource for ReplaySource with fn run(self, submit) {
   let text = @fs.read_file(self.path).text() catch {
     err => {
       @runtime.log("replay: \{self.path} を読めません: \{err}")

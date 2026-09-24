@@ -26,7 +26,7 @@ pub using @lib {
   type EngineStats,
   type EngineState,
   type Engine,
-  trait Source,
+  trait ChatSource,
   trait Sink,
   type IrcMessage,
   type LiveChatPage,

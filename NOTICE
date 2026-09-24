@@ -9,13 +9,15 @@ https://github.com/hiroyannnn/yuru-poll
 Copyright 2026 hiroyannnn
 License: Apache License, Version 2.0
 
-  - lib/twitch_parse.mbt, lib/youtube_parse.mbt, lib/stdin_parse.mbt and their tests
-    (extended to extract author names and Twitch emote names)
   - lib/response.mbt (pattern-matching style of the Jev response parser)
-  - lib/engine.mbt (the Source / Sink traits; `submit` no longer waits for a judgement)
-  - runtime/, jev/, adapters/stdin, adapters/twitch, adapters/youtube,
-    adapters/web/server.mbt (skeleton), cmd/yuru-come/cli.mbt (flag parsing)
+  - lib/engine.mbt (the Sink trait)
+  - runtime/, adapters/web/server.mbt (skeleton), cmd/yuru-come/cli.mbt (flag parsing)
   - eval/ (the metrics are modelled on yuru-poll's eval/run.py)
+
+The Twitch / YouTube / stdin readers, the Jev transport, .env loading and QR codes
+that were copied between yuru-poll and yuru-come now live in hiroyannnn/yuru-kit
+(https://github.com/hiroyannnn/yuru-kit, same author, Apache License, Version 2.0),
+which this product depends on.
 
 --------------------------------------------------------------------------------
 Portions of this product are copied from hiroyannnn/plutchik-chat

@@ -1,5 +1,5 @@
 import {
   "hiroyannnn/strsim",
   "moonbitlang/core/json",
-  "naoto24kawa/moonqr/encode" @moonqr,
+  "hiroyannnn/yuru-kit" @kit,
 }

@@ -10,8 +10,6 @@ pub const DEFAULT_MAX_COMPLETION_TOKENS : Int = 1024
 
 pub const DEFAULT_OPENAI_MODEL : String = "gpt-5.6-luna"
 
-pub const DEFAULT_POLLING_INTERVAL_MS : Int = 5000
-
 pub const DEFAULT_REASONING_EFFORT : String = "minimal"
 
 pub const JEV_MODEL : String = "jev-latest"
@@ -50,9 +48,9 @@ pub fn connection_was_healthy(connected_ms~ : Int64, healthy_ms? : Int64) -> Boo
 
 pub let default_reaction_words : Array[String]
 
-pub fn innertube_live_chat_body(InnertubeConfig, String) -> Json
+pub fn innertube_live_chat_body(@hiroyannnn/yuru-kit/lib.InnertubeConfig, String) -> Json
 
-pub fn innertube_live_chat_url(InnertubeConfig) -> String
+pub fn innertube_live_chat_url(@hiroyannnn/yuru-kit/lib.InnertubeConfig) -> String
 
 pub let jev_kinds : Array[Kind]
 
@@ -70,27 +68,27 @@ pub fn parse_chat_response(Int, String) -> String raise OpenAiError
 
 pub fn parse_dotenv(String) -> Map[String, String]
 
-pub fn parse_get_live_chat(Json) -> LiveChatPage raise YouTubeError
+pub fn parse_get_live_chat(Json) -> @hiroyannnn/yuru-kit/lib.LiveChatPage raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_irc_line(String) -> IrcMessage
+pub fn parse_irc_line(String) -> @hiroyannnn/yuru-kit/lib.IrcMessage
 
 pub fn parse_judge_request(Json) -> JudgeRequest raise JudgeRequestError
 
-pub fn parse_live_chat_id(Json) -> String raise YouTubeError
+pub fn parse_live_chat_id(Json) -> String raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_live_chat_page(Json) -> LiveChatPage raise YouTubeError
+pub fn parse_live_chat_page(Json) -> @hiroyannnn/yuru-kit/lib.LiveChatPage raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_live_chat_page_html(String) -> InnertubeConfig raise YouTubeError
+pub fn parse_live_chat_page_html(String) -> @hiroyannnn/yuru-kit/lib.InnertubeConfig raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
 pub fn parse_promos(Json) -> Array[Promo] raise PromoError
 
-pub fn parse_replay_line(String) -> (Int64, Comment)?
+pub fn parse_replay_line(String) -> (Int64, @hiroyannnn/yuru-kit/lib.Comment)?
 
 pub fn parse_response(Json) -> Triage raise ResponseError
 
 pub fn parse_response_text(String) -> Triage raise ResponseError
 
-pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> Comment?
+pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> @hiroyannnn/yuru-kit/lib.Comment?
 
 pub fn participant_id(String, String) -> String
 
@@ -146,13 +144,6 @@ pub(all) suberror ResponseError {
   UnknownKind(String)
 } derive(Eq, @debug.Debug)
 
-pub(all) suberror YouTubeError {
-  VideoNotFound
-  NotLive
-  ChatUnavailable(String)
-  TypeMismatch(String)
-} derive(Eq, @debug.Debug)
-
 // Types and methods
 type Bundle
 
@@ -195,21 +186,10 @@ pub struct Bundler {
   config : BundleConfig
   mut bundles : Array[Bundle]
 }
-pub fn Bundler::add(Self, String, Comment, Int64) -> BundleHit
+pub fn Bundler::add(Self, String, @hiroyannnn/yuru-kit/lib.Comment, Int64) -> BundleHit
 pub fn Bundler::new(config? : BundleConfig) -> Self
 pub fn Bundler::prune(Self, Int64) -> Unit
 pub fn Bundler::summaries(Self, Int64, min_count? : Int, limit? : Int) -> Array[BundleSummary]
-
-pub(all) struct Comment {
-  participant_id : String
-  author : String
-  text : String
-  at : Int64
-  emotes : Array[String]
-  channel : String
-} derive(Eq, ToJson, @debug.Debug)
-pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String], channel? : String) -> Self
-pub fn Comment::platform(Self) -> String
 
 pub struct DailyBudget {
   limit : Int
@@ -250,7 +230,7 @@ pub fn Engine::add_sink(Self, &Sink) -> Unit
 pub fn Engine::complete(Self, Pending, Triage?, Int64) -> Unit
 pub fn Engine::context(Self) -> String
 pub fn Engine::dismiss(Self, Int) -> Bool
-pub fn Engine::ingest(Self, Comment, Int64) -> Unit
+pub fn Engine::ingest(Self, @hiroyannnn/yuru-kit/lib.Comment, Int64) -> Unit
 pub fn Engine::new(config? : EngineConfig) -> Self
 pub fn Engine::resolve_pickup(Self, Int, PickupOutcome, Int64) -> Bool
 pub fn Engine::set_summary(Self, String, Int64) -> Unit
@@ -298,24 +278,12 @@ pub(all) struct EngineStats {
 
 pub(all) struct FlowEntry {
   id : Int
-  comment : Comment
+  comment : @hiroyannnn/yuru-kit/lib.Comment
   mut kind : Kind
   mut priority : Double?
   mut status : JudgeStatus
   mut pickup_id : Int?
 } derive(ToJson, @debug.Debug)
-
-pub(all) struct InnertubeConfig {
-  api_key : String
-  client_version : String
-  continuation : String
-} derive(Eq, @debug.Debug)
-
-pub(all) enum IrcMessage {
-  Ping(String)
-  Chat(Comment)
-  Other(String)
-} derive(Eq, @debug.Debug)
 
 pub(all) struct JudgeRequest {
   comment : String
@@ -351,12 +319,6 @@ pub fn Kind::key(Self) -> String
 pub fn Kind::label(Self) -> String
 pub impl ToJson for Kind
 
-pub(all) struct LiveChatPage {
-  comments : Array[Comment]
-  next_page_token : String?
-  polling_interval_ms : Int
-} derive(@debug.Debug)
-
 pub(all) struct Message {
   role : Role
   content : String
@@ -387,7 +349,7 @@ pub(all) struct MoodSnapshot {
 } derive(ToJson, @debug.Debug)
 
 pub struct Pending {
-  comment : Comment
+  comment : @hiroyannnn/yuru-kit/lib.Comment
   entry : FlowEntry
   mood_id : Int
   verdict : BundleVerdict?
@@ -407,7 +369,7 @@ pub fn PickupConfig::should_pick_up(Self, Kind, Double) -> Bool
 type PickupItem
 
 pub(all) struct PickupLabel {
-  comment : Comment
+  comment : @hiroyannnn/yuru-kit/lib.Comment
   kind : Kind
   priority : Double
   offered_at : Int64
@@ -424,7 +386,7 @@ pub struct PickupList {
 pub fn PickupList::bump(Self, Int) -> Bool
 pub fn PickupList::dismiss(Self, Int, now? : Int64) -> Bool
 pub fn PickupList::new(config? : PickupConfig) -> Self
-pub fn PickupList::offer(Self, Comment, Kind, Double, Int64) -> Int?
+pub fn PickupList::offer(Self, @hiroyannnn/yuru-kit/lib.Comment, Kind, Double, Int64) -> Int?
 pub fn PickupList::prune(Self, Int64) -> Unit
 pub fn PickupList::resolve(Self, Int, PickupOutcome, Int64) -> Bool
 pub fn PickupList::size(Self) -> Int
@@ -440,7 +402,7 @@ pub impl ToJson for PickupOutcome
 
 pub(all) struct PickupView {
   id : Int
-  comment : Comment
+  comment : @hiroyannnn/yuru-kit/lib.Comment
   kind : Kind
   priority : Double
   at : Int64
@@ -530,12 +492,19 @@ pub(all) struct Triage {
 pub fn Triage::kind_probability(Self, Kind) -> Double
 
 // Type aliases
+pub using @hiroyannnn/yuru-kit/lib {type Comment}
+
+pub using @hiroyannnn/yuru-kit/lib {type InnertubeConfig}
+
+pub using @hiroyannnn/yuru-kit/lib {type IrcMessage}
+
+pub using @hiroyannnn/yuru-kit/lib {type LiveChatPage}
+
+pub using @hiroyannnn/yuru-kit/lib {type YouTubeError}
+
+pub using @hiroyannnn/yuru-kit/lib {trait ChatSource}
 
 // Traits
 pub(open) trait Sink {
   fn on_entry(Self, FlowEntry) -> Unit
-}
-
-pub(open) trait Source {
-  async fn run(Self, async (Comment) -> Unit) -> Unit
 }

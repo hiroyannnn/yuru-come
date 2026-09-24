@@ -1,18 +1,14 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "hiroyannnn/yuru-come/runtime"
 
-import {
-  "hiroyannnn/yuru-come/lib",
-}
-
 // Values
 pub async fn load_dotenv(path? : String) -> Int
 
 pub async fn log(String) -> Unit
 
-pub async fn run(@lib.Engine, async (String, @lib.Comment) -> @lib.Triage, Array[&@lib.Source], workers? : Int, judge_timeout_ms? : Int) -> Unit
+pub async fn run(@hiroyannnn/yuru-come/lib.Engine, async (String, @hiroyannnn/yuru-kit/lib.Comment) -> @hiroyannnn/yuru-come/lib.Triage, Array[&@hiroyannnn/yuru-kit/lib.ChatSource], workers? : Int, judge_timeout_ms? : Int) -> Unit
 
-pub async fn summarize_loop(@lib.Engine, async (String, String) -> String, interval_ms? : Int) -> Unit
+pub async fn summarize_loop(@hiroyannnn/yuru-come/lib.Engine, async (String, String) -> String, interval_ms? : Int) -> Unit
 
 // Errors
 
