@@ -286,3 +286,9 @@ pub fn gate_dump() -> String {
     None => ""
   }
 }
+
+///|
+/// オーバーレイ用。URL の QR コードを SVG で返す。作れなければ空文字。
+pub fn qr(text : String) -> String {
+  @lib.qr_svg(text).unwrap_or("")
+}

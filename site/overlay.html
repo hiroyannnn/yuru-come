@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>yuru-come overlay</title>
+  <style>
+    /* OBS のブラウザソース用。背景は透過。話題になった商品の QR とリンクだけを出す */
+    html, body { margin: 0; background: transparent; }
+    body { font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif; color: #fff; }
+    .promos { position: fixed; right: 24px; bottom: 24px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+    .promo {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(20, 22, 26, .88); border: 2px solid #ffd166; border-radius: 12px; padding: 12px 16px 12px 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .4); animation: pop .3s ease-out;
+    }
+    .qr { width: 120px; height: 120px; background: #fff; border-radius: 6px; }
+    .qr svg { width: 100%; height: 100%; display: block; }
+    .label { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+    .url { font-size: 15px; color: #ffd166; margin: 0; word-break: break-all; max-width: 32em; }
+    .trigger { font-size: 13px; color: #b6bcc6; margin: 6px 0 0; max-width: 32em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @keyframes pop { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="promos" id="promos"></div>
+  <script type="module">
+    import * as yc from "./jsapi.js";
+    import { connectTwitch } from "./twitch.js";
+    import { decodePromos } from "./settings.js";
+
+    const params = new URLSearchParams(location.hash.slice(1));
+    const channel = params.get("c") || "";
+    const promos = decodePromos(params.get("p"));
+    // オーバーレイは商品の話題を拾うだけなので、判定待ちには何も積まない（queue_limit 0）
+    yc.app_new(JSON.stringify({ promos, queue_limit: 0 }));
+    if (channel) {
+      connectTwitch(channel, {
+        loginLines: yc.app_login_lines,
+        onData: (text) => yc.app_irc_line(text, Date.now()),
+        onStatus: () => {},
+      });
+    }
+
+    const container = document.getElementById("promos");
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+    function render() {
+      const active = JSON.parse(yc.app_state(Date.now())).promos || [];
+      const existing = new Map([...container.children].map((node) => [node.dataset.key, node]));
+      container.replaceChildren(...active.map((promo) => {
+        const key = `${promo.url}@${promo.shown_at}`;
+        let node = existing.get(key);
+        if (!node) {
+          node = el("div", "promo");
+          node.dataset.key = key;
+          const qr = el("div", "qr");
+          // QR の SVG は URL から moonqr が組み立てたもので、URL の文字列そのものは入らない
+          qr.innerHTML = yc.qr(promo.url);
+          const text = el("div");
+          text.append(el("p", "label", promo.label), el("p", "url", promo.url), el("p", "trigger", `「${promo.trigger}」`));
+          node.append(qr, text);
+        }
+        return node;
+      }));
+    }
+    setInterval(render, 1000);
+  </script>
+</body>
+</html>

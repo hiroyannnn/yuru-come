@@ -21,6 +21,7 @@ options(
         "gate_new",
         "gate_check",
         "gate_dump",
+        "qr",
       ],
       "format": "esm",
     },

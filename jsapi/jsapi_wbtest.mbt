@@ -220,3 +220,9 @@ test "中継の関門: IP ごとの流量制限と 1 日の予算。保存して
   gate_new(2, 1, 60000.0, saved)
   assert_eq(gate_check("4.4.4.4", NOW + 4), "budget")
 }
+
+///|
+test "オーバーレイ用に URL の QR コードを SVG で返す。作れなければ空文字" {
+  assert_true(qr("https://example.com/mic").has_prefix("<svg"))
+  assert_eq(qr(""), "")
+}

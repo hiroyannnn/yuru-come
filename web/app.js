@@ -12,6 +12,23 @@ const STATUS_TAGS = { pending: "判定待ち", dropped: "未判定（間引き�
 const POLL_MS = 1000;
 
 const $ = (id) => document.getElementById(id);
+
+// データの取り方。ローカル版はサーバの /api を叩く。ブラウザ版（site/）は手元のエンジンを
+// window.YURU_SOURCE として差し込む（{ getState, dismiss, connection? }）。
+const source = window.YURU_SOURCE || {
+  async getState() {
+    const response = await fetch("/api/state", { cache: "no-store" });
+    if (!response.ok) throw new Error(String(response.status));
+    return response.json();
+  },
+  async dismiss(id, action) {
+    await fetch("/api/dismiss", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action }),
+    });
+  },
+};
 const openedAbuse = new Set();
 const dismissed = new Set();
 
@@ -105,11 +122,7 @@ async function dismiss(id, action) {
   dismissed.add(id);
   if (lastState) renderPickups(lastState);
   try {
-    await fetch("/api/dismiss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
-    });
+    await source.dismiss(id, action);
   } catch (_) {
     dismissed.delete(id);
   }
@@ -262,11 +275,10 @@ async function refresh() {
   if (refreshing) return;
   refreshing = true;
   try {
-    const response = await fetch("/api/state", { cache: "no-store" });
-    if (!response.ok) throw new Error(String(response.status));
-    render(await response.json());
-    $("conn").textContent = "接続中";
-    $("conn").classList.remove("down");
+    render(await source.getState());
+    const connection = source.connection ? source.connection() : { ok: true, text: "接続中" };
+    $("conn").textContent = connection.text;
+    $("conn").classList.toggle("down", !connection.ok);
   } catch (_) {
     $("conn").textContent = "サーバに接続できません";
     $("conn").classList.add("down");

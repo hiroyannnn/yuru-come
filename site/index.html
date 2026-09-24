@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>yuru-come</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body { display: block; }
+    .setup { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+    .setup h1 { color: var(--accent); font-size: 22px; margin: 0 0 4px; }
+    .setup .lead { color: var(--muted); margin: 0 0 24px; }
+    .setup label { display: block; margin: 16px 0 4px; font-weight: 600; }
+    .setup .help { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .setup input, .setup textarea {
+      width: 100%; font: inherit; color: var(--text); background: #232730;
+      border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px;
+    }
+    .setup textarea { min-height: 120px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+    .setup details { margin-top: 20px; }
+    .setup summary { cursor: pointer; color: var(--muted); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; align-items: center; }
+    .primary, .secondary {
+      font: inherit; border-radius: 6px; padding: 10px 18px; cursor: pointer; border: 1px solid var(--line);
+    }
+    .primary { background: var(--accent); color: #14161a; font-weight: 700; border-color: var(--accent); }
+    .secondary { background: none; color: var(--text); }
+    .overlay-url { margin-top: 24px; padding: 12px; border: 1px dashed var(--line); border-radius: 6px; overflow-wrap: anywhere; font-size: 13px; }
+    .error { color: var(--danger); margin-top: 8px; min-height: 1.5em; }
+    .note { margin-top: 32px; font-size: 12px; color: var(--muted); line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <main class="setup">
+    <h1>yuru-come</h1>
+    <p class="lead">配信のコメントを全部読まなくていいようにする、拾い上げ専用パネル。既存のコメントビューワーの横に置いて使います。</p>
+
+    <form id="form">
+      <label for="channel">Twitch のチャンネル名
+        <span class="help">twitch.tv/ の後ろの部分。ログインは要りません</span></label>
+      <input id="channel" name="channel" required autocomplete="off" placeholder="mychannel">
+
+      <label for="context">配信の話題（任意）
+        <span class="help">「Factorio で石油精製を組んでいる」のように書くと、指摘や質問の見分けが安定します</span></label>
+      <input id="context" name="context" maxlength="200" autocomplete="off">
+
+      <details>
+        <summary>もっと設定する</summary>
+
+        <label for="pickup_floor">気になるコメントに出す下限（0〜2）
+          <span class="help">大きくすると、確度の高い質問や指摘だけが出ます。既定 0.6</span></label>
+        <input id="pickup_floor" name="pickup_floor" type="number" min="0" max="2.5" step="0.1">
+
+        <label for="reaction_words">反応として扱う言葉（改行区切り）
+          <span class="help">チャンネル独自の定型の反応（「てぇてぇ」など）。判定に回さず「反応」として束ねます</span></label>
+        <textarea id="reaction_words" name="reaction_words"></textarea>
+
+        <label for="promos">商品・URL（JSON）
+          <span class="help">コメントがキーワードの話題になったら、オーバーレイに QR とリンクを出します。例: [{"label": "使っているマイク", "url": "https://…", "keywords": ["マイク", "mic"]}]</span></label>
+        <textarea id="promos" name="promos" spellcheck="false"></textarea>
+
+        <label for="openai_key">OpenAI の API キー（任意）
+          <span class="help">あれば 30 秒ごとに「いまの空気」を一文にします。キーはこのブラウザにだけ保存し、OpenAI にだけ送ります</span></label>
+        <input id="openai_key" name="openai_key" type="password" autocomplete="off">
+      </details>
+
+      <p class="error" id="error" role="alert"></p>
+      <div class="row">
+        <button class="primary" type="submit">ダッシュボードを開く</button>
+        <button class="secondary" type="button" id="export">設定を書き出す</button>
+        <button class="secondary" type="button" id="import">設定を読み込む</button>
+        <button class="secondary" type="button" id="labels">正解データを保存</button>
+        <input type="file" id="import-file" accept="application/json" hidden>
+      </div>
+    </form>
+
+    <div class="overlay-url" id="overlay" hidden>
+      <strong>OBS のブラウザソースに入れる URL（商品の QR 表示用）</strong><br>
+      <span id="overlay-url"></span>
+      <button class="secondary" type="button" id="copy-overlay">コピー</button>
+    </div>
+
+    <p class="note">
+      コメントは Twitch からこのブラウザが直接受け取ります。コメントの種類の判定のために、中身のあるコメントだけが本文と配信の話題つきで運営者の中継を通って TypeSafe Jev に送られます（保存はしません）。1 日の判定数には上限があり、超えると束ねと早期判定だけで動きます。設定・キー・正解データはこのブラウザにだけ保存されます。
+      YouTube と TikTok は<a href="https://github.com/hiroyannnn/yuru-come">ローカル版</a>で使えます。
+    </p>
+  </main>
+  <script type="module" src="/setup.js"></script>
+</body>
+</html>
