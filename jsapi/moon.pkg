@@ -1,0 +1,29 @@
+import {
+  "hiroyannnn/yuru-come/lib",
+  "moonbitlang/core/json",
+}
+
+options(
+  link: {
+    "js": {
+      "exports": [
+        "app_new",
+        "app_login_lines",
+        "app_irc_line",
+        "app_take_next",
+        "app_complete",
+        "app_state",
+        "app_dismiss",
+        "app_take_labels",
+        "app_summary_prompt",
+        "app_set_summary",
+        "judge_body",
+        "gate_new",
+        "gate_check",
+        "gate_dump",
+        "qr",
+      ],
+      "format": "esm",
+    },
+  },
+)

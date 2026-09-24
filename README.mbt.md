@@ -40,7 +40,28 @@ Jev が遅くてもチャットの読み取りは止めません。判定待ち�
 
 ## セットアップ
 
-### バイナリで使う（配信者向け）
+### ブラウザで使う（いちばん手軽、Twitch のみ）
+
+ブラウザ版（Cloudflare Workers で配信）を開いて、Twitch のチャンネル名を入れるだけで使えます。インストールもログインもキーも要りません。
+
+- エンジンはブラウザのタブの中で動きます。コメントはブラウザが Twitch から直接（匿名・読み取り専用で）受け取ります
+- 中身のあるコメントだけが、種類の判定のために本文と配信の話題つきで運営者の中継（`/api/judge`）を通って TypeSafe Jev に送られます。中継は保存しません
+- 判定は運営者持ちで、1 日の判定数に上限があります。超えると束ねと早期判定だけで動きます
+- 設定・商品・正解データ・自分の OpenAI キー（任意、「いまの空気」の一文用）はブラウザにだけ保存します。設定は書き出し・読み込みできます
+- 商品の QR 用のオーバーレイ URL は設定画面に出ます。OBS のブラウザソースは別のブラウザなので、チャンネルと商品を URL の `#` に入れて渡します
+- ダッシュボードのタブを閉じると止まります。YouTube と TikTok はブラウザから読めないので、ローカル版（下のバイナリ）を使ってください
+
+自分でホストするなら:
+
+```bash
+cd worker
+npx wrangler secret put JEV_API_KEY   # AI Gateway のキー
+npx wrangler deploy                  # scripts/build_site.sh で site-dist/ を組み立ててから配信
+```
+
+`worker/wrangler.toml` の `DAILY_LIMIT`（1 日の判定数、既定 30000 ≒ $0.8/日）と `PER_IP_PER_MINUTE`（既定 300）で上限を変えられます。
+
+### バイナリで使う（YouTube・TikTok も使いたい人向け）
 
 [Releases](https://github.com/hiroyannnn/yuru-come/releases) から自分の環境のもの（macOS Apple Silicon か Linux x86_64）を落として展開します。中に `yuru-come`（本体）、`yuru-come-eval`（評価コマンド）、`samples/`、`.env.example` が入っています。
 
@@ -410,6 +431,9 @@ test "正規化して束ねる" {
 | `adapters/*` | native | stdin / twitch / youtube / replay の Source、terminal / web の Sink |
 | `cmd/yuru-come` | native | CLI |
 | `cmd/eval` | native | 評価コマンド |
+| `jsapi` | 全部（JS で使う） | ブラウザ版と中継 Worker から呼ぶ入口。JSON 文字列でエンジンを操作する |
+
+ブラウザ版の JS は `site/`（設定画面、Twitch 接続、エンジンの駆動、オーバーレイ）、中継は `worker/`（静的配信、`/api/judge`、1 日の予算と IP ごとの流量制限を持つ Durable Object）にあります。ダッシュボードの HTML・CSS・描画は `web/` をそのまま使います。
 
 ```bash
 moon test --target all

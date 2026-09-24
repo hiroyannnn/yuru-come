@@ -16,6 +16,10 @@ pub const DEFAULT_REASONING_EFFORT : String = "minimal"
 
 pub const JEV_MODEL : String = "jev-latest"
 
+pub const JUDGE_MAX_COMMENT_CHARS : Int = 500
+
+pub const JUDGE_MAX_CONTEXT_CHARS : Int = 200
+
 pub const KIND_INSTRUCTIONS : String = "これはライブ配信のチャット欄に視聴者が書いたコメントです。このコメントはどの種類か？"
 
 pub const KIND_QUESTION_KEY : String = "kind"
@@ -70,6 +74,8 @@ pub fn parse_get_live_chat(Json) -> LiveChatPage raise YouTubeError
 
 pub fn parse_irc_line(String) -> IrcMessage
 
+pub fn parse_judge_request(Json) -> JudgeRequest raise JudgeRequestError
+
 pub fn parse_live_chat_id(Json) -> String raise YouTubeError
 
 pub fn parse_live_chat_page(Json) -> LiveChatPage raise YouTubeError
@@ -113,6 +119,11 @@ pub fn unify_width(String) -> String
 pub fn videos_list_url(String, String) -> String
 
 // Errors
+pub(all) suberror JudgeRequestError {
+  MissingComment
+  TooLong(String)
+} derive(Eq, @debug.Debug)
+
 pub(all) suberror OpenAiError {
   Unauthorized(String)
   RateLimited(String)
@@ -199,6 +210,18 @@ pub(all) struct Comment {
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Comment::new(String, String, author? : String, at? : Int64, emotes? : Array[String], channel? : String) -> Self
 pub fn Comment::platform(Self) -> String
+
+pub struct DailyBudget {
+  limit : Int
+  mut day : Int64
+  mut used : Int
+}
+pub fn DailyBudget::dump(Self) -> Json
+pub fn DailyBudget::new(limit~ : Int) -> Self
+pub fn DailyBudget::remaining(Self, Int64) -> Int
+pub fn DailyBudget::restore(Json, limit~ : Int) -> Self
+pub fn DailyBudget::spend(Self, Int64) -> Bool
+pub fn DailyBudget::used(Self, Int64) -> Int
 
 pub struct Engine {
   config : EngineConfig
@@ -292,6 +315,11 @@ pub(all) enum IrcMessage {
   Ping(String)
   Chat(Comment)
   Other(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct JudgeRequest {
+  comment : String
+  context : String
 } derive(Eq, @debug.Debug)
 
 pub(all) enum JudgeStatus {
@@ -449,6 +477,16 @@ pub(all) struct PromoView {
   trigger : String
   shown_at : Int64
 } derive(Eq, ToJson, @debug.Debug)
+
+pub struct RateLimiter {
+  limit : Int
+  window_ms : Int64
+  hits : Map[String, Array[Int64]]
+  mut calls_since_sweep : Int
+}
+pub fn RateLimiter::allow(Self, String, Int64) -> Bool
+pub fn RateLimiter::new(limit~ : Int, window_ms~ : Int64) -> Self
+pub fn RateLimiter::tracked_keys(Self) -> Int
 
 pub(all) struct ReactionCount {
   label : String

@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "hiroyannnn/yuru-come/jsapi"
+
+// Values
+pub fn app_complete(Int, String, Double) -> Unit
+
+pub fn app_dismiss(Int, String, Double) -> Bool
+
+pub fn app_irc_line(String, Double) -> String
+
+pub fn app_login_lines(String, String) -> String
+
+pub fn app_new(String) -> String
+
+pub fn app_set_summary(String, Double) -> Unit
+
+pub fn app_state(Double) -> String
+
+pub fn app_summary_prompt(Double) -> String
+
+pub fn app_take_labels() -> String
+
+pub fn app_take_next() -> String
+
+pub fn gate_check(String, Double) -> String
+
+pub fn gate_dump() -> String
+
+pub fn gate_new(Int, Int, Double, String) -> Unit
+
+pub fn judge_body(String, String) -> String
+
+pub fn qr(String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
