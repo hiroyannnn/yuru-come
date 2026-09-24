@@ -103,3 +103,16 @@ test "Comment のチャンネルは省略すると空" {
   assert_eq(@lib.Comment::new("stdin:a", "hi").channel, "")
   assert_eq(@lib.Comment::new("twitch:1", "hi", channel="ch").channel, "ch")
 }
+
+///|
+test "Twitch の emotes タグから取ったエモート名は、正規化でトークンとして残る" {
+  let line =
+    #|@display-name=Carol;emotes=25:0-4,12-16/1902:6-10;user-id=7 :carol!carol@carol.tmi.twitch.tv PRIVMSG #ch :Kappa Keepo Kappa やったー
+  guard @lib.parse_irc_line(line) is Chat(comment) else {
+    fail("Chat でない")
+  }
+  assert_eq(
+    @lib.normalize(comment.text, emotes=comment.emotes),
+    "Kappa Keepo Kappa やった",
+  )
+}

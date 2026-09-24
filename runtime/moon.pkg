@@ -1,10 +1,8 @@
 import {
   "hiroyannnn/yuru-come/lib",
-  "moonbitlang/core/env",
   "moonbitlang/async",
   "moonbitlang/async/cond_var",
-  "moonbitlang/async/fs",
-  "moonbitlang/async/stdio",
+  "hiroyannnn/yuru-kit/sources",
 }
 
 import {

@@ -1,12 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "hiroyannnn/yuru-come"
 
-import {
-  "hiroyannnn/yuru-come/lib",
-}
-
 // Values
-pub fn build_chat_request(String, Array[@lib.Message], max_completion_tokens? : Int, reasoning_effort? : String?) -> Json
+pub fn build_chat_request(String, Array[@hiroyannnn/yuru-come/lib.Message], max_completion_tokens? : Int, reasoning_effort? : String?) -> Json
 
 pub fn build_request(String, context? : String, model? : String) -> Json
 
@@ -18,11 +14,11 @@ pub fn connection_was_healthy(connected_ms~ : Int64, healthy_ms? : Int64) -> Boo
 
 pub let default_reaction_words : Array[String]
 
-pub fn innertube_live_chat_body(@lib.InnertubeConfig, String) -> Json
+pub fn innertube_live_chat_body(@hiroyannnn/yuru-kit/lib.InnertubeConfig, String) -> Json
 
-pub fn innertube_live_chat_url(@lib.InnertubeConfig) -> String
+pub fn innertube_live_chat_url(@hiroyannnn/yuru-kit/lib.InnertubeConfig) -> String
 
-pub let jev_kinds : Array[@lib.Kind]
+pub let jev_kinds : Array[@hiroyannnn/yuru-come/lib.Kind]
 
 pub fn merge_env(Map[String, String], Map[String, String]) -> Map[String, String]
 
@@ -30,33 +26,33 @@ pub fn next_reasoning_effort(String?) -> String?
 
 pub fn normalize(String, emotes? : Array[String]) -> String
 
-pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@lib.Token]
+pub fn normalize_tokens(String, emotes? : Array[String]) -> Array[@hiroyannnn/yuru-come/lib.Token]
 
-pub fn parse_chat_response(Int, String) -> String raise @lib.OpenAiError
+pub fn parse_chat_response(Int, String) -> String raise @hiroyannnn/yuru-come/lib.OpenAiError
 
 pub fn parse_dotenv(String) -> Map[String, String]
 
-pub fn parse_get_live_chat(Json) -> @lib.LiveChatPage raise @lib.YouTubeError
+pub fn parse_get_live_chat(Json) -> @hiroyannnn/yuru-kit/lib.LiveChatPage raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_irc_line(String) -> @lib.IrcMessage
+pub fn parse_irc_line(String) -> @hiroyannnn/yuru-kit/lib.IrcMessage
 
-pub fn parse_judge_request(Json) -> @lib.JudgeRequest raise @lib.JudgeRequestError
+pub fn parse_judge_request(Json) -> @hiroyannnn/yuru-come/lib.JudgeRequest raise @hiroyannnn/yuru-come/lib.JudgeRequestError
 
-pub fn parse_live_chat_id(Json) -> String raise @lib.YouTubeError
+pub fn parse_live_chat_id(Json) -> String raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_live_chat_page(Json) -> @lib.LiveChatPage raise @lib.YouTubeError
+pub fn parse_live_chat_page(Json) -> @hiroyannnn/yuru-kit/lib.LiveChatPage raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_live_chat_page_html(String) -> @lib.InnertubeConfig raise @lib.YouTubeError
+pub fn parse_live_chat_page_html(String) -> @hiroyannnn/yuru-kit/lib.InnertubeConfig raise @hiroyannnn/yuru-kit/lib.YouTubeError
 
-pub fn parse_promos(Json) -> Array[@lib.Promo] raise @lib.PromoError
+pub fn parse_promos(Json) -> Array[@hiroyannnn/yuru-come/lib.Promo] raise @hiroyannnn/yuru-come/lib.PromoError
 
-pub fn parse_replay_line(String) -> (Int64, @lib.Comment)?
+pub fn parse_replay_line(String) -> (Int64, @hiroyannnn/yuru-kit/lib.Comment)?
 
-pub fn parse_response(Json) -> @lib.Triage raise @lib.ResponseError
+pub fn parse_response(Json) -> @hiroyannnn/yuru-come/lib.Triage raise @hiroyannnn/yuru-come/lib.ResponseError
 
-pub fn parse_response_text(String) -> @lib.Triage raise @lib.ResponseError
+pub fn parse_response_text(String) -> @hiroyannnn/yuru-come/lib.Triage raise @hiroyannnn/yuru-come/lib.ResponseError
 
-pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> @lib.Comment?
+pub fn parse_stdin_line(String, at~ : Int64, anonymous_id? : String, source? : String) -> @hiroyannnn/yuru-kit/lib.Comment?
 
 pub fn participant_id(String, String) -> String
 
@@ -70,11 +66,11 @@ pub fn reconnect_delay_ms(Int, base_ms? : Int, max_ms? : Int) -> Int
 
 pub fn replay_delay_ms(Int64, Int64, Double) -> Int
 
-pub fn summary_needed(@lib.EngineState, last_entry_id~ : Int) -> Bool
+pub fn summary_needed(@hiroyannnn/yuru-come/lib.EngineState, last_entry_id~ : Int) -> Bool
 
-pub fn summary_prompt(@lib.EngineState, recent_limit? : Int) -> @lib.SummaryPrompt
+pub fn summary_prompt(@hiroyannnn/yuru-come/lib.EngineState, recent_limit? : Int) -> @hiroyannnn/yuru-come/lib.SummaryPrompt
 
-pub fn template_summary(@lib.EngineState) -> String
+pub fn template_summary(@hiroyannnn/yuru-come/lib.EngineState) -> String
 
 pub fn twitch_login_lines(String, String) -> Array[String]
 
@@ -85,92 +81,92 @@ pub fn unify_width(String) -> String
 // Types and methods
 
 // Type aliases
-pub using @lib {type BundleConfig}
+pub using @hiroyannnn/yuru-come/lib {type BundleConfig}
 
-pub using @lib {type BundleHit}
+pub using @hiroyannnn/yuru-come/lib {type BundleHit}
 
-pub using @lib {type BundleMetric}
+pub using @hiroyannnn/yuru-come/lib {type BundleMetric}
 
-pub using @lib {type BundleSummary}
+pub using @hiroyannnn/yuru-come/lib {type BundleSummary}
 
-pub using @lib {type Bundler}
+pub using @hiroyannnn/yuru-come/lib {type Bundler}
 
-pub using @lib {type Comment}
+pub using @hiroyannnn/yuru-kit/lib {type Comment}
 
-pub using @lib {type DailyBudget}
+pub using @hiroyannnn/yuru-come/lib {type DailyBudget}
 
-pub using @lib {type Engine}
+pub using @hiroyannnn/yuru-come/lib {type Engine}
 
-pub using @lib {type EngineConfig}
+pub using @hiroyannnn/yuru-come/lib {type EngineConfig}
 
-pub using @lib {type EngineState}
+pub using @hiroyannnn/yuru-come/lib {type EngineState}
 
-pub using @lib {type EngineStats}
+pub using @hiroyannnn/yuru-come/lib {type EngineStats}
 
-pub using @lib {type FlowEntry}
+pub using @hiroyannnn/yuru-come/lib {type FlowEntry}
 
-pub using @lib {type InnertubeConfig}
+pub using @hiroyannnn/yuru-kit/lib {type InnertubeConfig}
 
-pub using @lib {type IrcMessage}
+pub using @hiroyannnn/yuru-kit/lib {type IrcMessage}
 
-pub using @lib {type JudgeRequest}
+pub using @hiroyannnn/yuru-come/lib {type JudgeRequest}
 
-pub using @lib {type JudgeRequestError}
+pub using @hiroyannnn/yuru-come/lib {type JudgeRequestError}
 
-pub using @lib {type JudgeStatus}
+pub using @hiroyannnn/yuru-come/lib {type JudgeStatus}
 
-pub using @lib {type Kind}
+pub using @hiroyannnn/yuru-come/lib {type Kind}
 
-pub using @lib {type LiveChatPage}
+pub using @hiroyannnn/yuru-kit/lib {type LiveChatPage}
 
-pub using @lib {type Message}
+pub using @hiroyannnn/yuru-come/lib {type Message}
 
-pub using @lib {type Mood}
+pub using @hiroyannnn/yuru-come/lib {type Mood}
 
-pub using @lib {type MoodSnapshot}
+pub using @hiroyannnn/yuru-come/lib {type MoodSnapshot}
 
-pub using @lib {type OpenAiError}
+pub using @hiroyannnn/yuru-come/lib {type OpenAiError}
 
-pub using @lib {type Pending}
+pub using @hiroyannnn/yuru-come/lib {type Pending}
 
-pub using @lib {type PickupConfig}
+pub using @hiroyannnn/yuru-come/lib {type PickupConfig}
 
-pub using @lib {type PickupList}
+pub using @hiroyannnn/yuru-come/lib {type PickupList}
 
-pub using @lib {type PickupView}
+pub using @hiroyannnn/yuru-come/lib {type PickupView}
 
-pub using @lib {type Promo}
+pub using @hiroyannnn/yuru-come/lib {type Promo}
 
-pub using @lib {type PromoBoard}
+pub using @hiroyannnn/yuru-come/lib {type PromoBoard}
 
-pub using @lib {type PromoConfig}
+pub using @hiroyannnn/yuru-come/lib {type PromoConfig}
 
-pub using @lib {type PromoError}
+pub using @hiroyannnn/yuru-come/lib {type PromoError}
 
-pub using @lib {type PromoView}
+pub using @hiroyannnn/yuru-come/lib {type PromoView}
 
-pub using @lib {type RateLimiter}
+pub using @hiroyannnn/yuru-come/lib {type RateLimiter}
 
-pub using @lib {type ReactionCount}
+pub using @hiroyannnn/yuru-come/lib {type ReactionCount}
 
-pub using @lib {type ReactionRules}
+pub using @hiroyannnn/yuru-come/lib {type ReactionRules}
 
-pub using @lib {type ResponseError}
+pub using @hiroyannnn/yuru-come/lib {type ResponseError}
 
-pub using @lib {type Role}
+pub using @hiroyannnn/yuru-come/lib {type Role}
 
-pub using @lib {type Summary}
+pub using @hiroyannnn/yuru-come/lib {type Summary}
 
-pub using @lib {type SummaryPrompt}
+pub using @hiroyannnn/yuru-come/lib {type SummaryPrompt}
 
-pub using @lib {type Token}
+pub using @hiroyannnn/yuru-come/lib {type Token}
 
-pub using @lib {type Triage}
+pub using @hiroyannnn/yuru-come/lib {type Triage}
 
-pub using @lib {type YouTubeError}
+pub using @hiroyannnn/yuru-kit/lib {type YouTubeError}
 
-pub using @lib {trait Sink}
+pub using @hiroyannnn/yuru-kit/lib {trait ChatSource}
 
-pub using @lib {trait Source}
+pub using @hiroyannnn/yuru-come/lib {trait Sink}
 
 // Traits

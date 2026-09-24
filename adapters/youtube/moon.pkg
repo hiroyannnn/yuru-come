@@ -1,8 +1,0 @@
-import {
-  "hiroyannnn/yuru-come/lib",
-  "hiroyannnn/yuru-come/runtime",
-  "moonbitlang/async",
-  "moonbitlang/async/http",
-}
-
-supported_targets = "-all+native"

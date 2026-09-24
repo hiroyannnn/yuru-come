@@ -7,7 +7,7 @@ struct ArraySource {
 }
 
 ///|
-impl @lib.Source for ArraySource with fn run(self, submit) {
+impl @lib.ChatSource for ArraySource with fn run(self, submit) {
   let started = @async.now()
   for i, text in self.comments {
     submit(@lib.Comment::new("test:u\{i}", text, author="u\{i}"))

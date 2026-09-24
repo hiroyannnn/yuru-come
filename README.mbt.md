@@ -424,11 +424,11 @@ test "正規化して束ねる" {
 
 | パッケージ | ターゲット | 役割 |
 | --- | --- | --- |
-| `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、商品の話題、QR、エンジン、各 Source のパーサ（Twitch IRC、YouTube の innertube と Data API、stdin、replay） |
+| `lib` | 全部 | 正規化、束ね、早期判定、リクエスト組み立て、レスポンス解釈、拾い上げ、空気の集計、商品の話題、エンジン、replay のパーサ。発言の型・Twitch と YouTube と stdin のパーサ・QR は [yuru-kit](https://github.com/hiroyannnn/yuru-kit) のものを同じ名前で再エクスポート |
 | `runtime` | native | Source の並行実行と、判定ワーカー（タイムアウトつき） |
-| `jev` | native | Jev 互換 API の HTTP クライアント |
+| `jev` | native | kind と priority の質問の組み立てと応答の解釈（送信と再試行は yuru-kit） |
 | `llm` | native | OpenAI chat/completions のクライアント（空気の一文用） |
-| `adapters/*` | native | stdin / twitch / youtube / replay の Source、terminal / web の Sink |
+| `adapters/*` | native | replay の Source、terminal / web の Sink（stdin / twitch / youtube の Source は yuru-kit の `sources`） |
 | `cmd/yuru-come` | native | CLI |
 | `cmd/eval` | native | 評価コマンド |
 | `jsapi` | 全部（JS で使う） | ブラウザ版と中継 Worker から呼ぶ入口。JSON 文字列でエンジンを操作する |
@@ -451,7 +451,8 @@ moon test --target all
 
 ## Acknowledgments
 
-- [hiroyannnn/yuru-poll](https://github.com/hiroyannnn/yuru-poll)（Apache-2.0）: Twitch / YouTube / stdin のパーサとアダプタ、Jev クライアント、runtime、web サーバの骨格、CLI の解釈をコピーして直しています。
+- [hiroyannnn/yuru-kit](https://github.com/hiroyannnn/yuru-kit)（Apache-2.0、同じ作者）: Twitch / YouTube / stdin の読み取り、Jev の送信と再試行、`.env` の読み込み、QR。yuru-poll と共通の部品です。
+- [hiroyannnn/yuru-poll](https://github.com/hiroyannnn/yuru-poll)（Apache-2.0）: runtime、web サーバの骨格、CLI の解釈をコピーして直しています。
 - [hiroyannnn/plutchik-chat](https://github.com/hiroyannnn/plutchik-chat)（Apache-2.0）: OpenAI chat/completions のリクエスト組み立て・レスポンス解釈・クライアントをコピーしています。
 - [naoto24kawa/moonqr](https://github.com/elchika-inc/moonqr)（Apache-2.0）: オーバーレイの QR コード。
 - [hiroyannnn/strsim](https://github.com/hiroyannnn/strsim)（Apache-2.0、strsim-rs 由来のアルゴリズムは MIT）: 短いコメントの類似度。

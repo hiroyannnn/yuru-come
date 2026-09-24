@@ -11,6 +11,7 @@ const DEFAULT_CONTEXT : String = "ゲーム実況の配信。雑談もまじえ�
 
 ///|
 async fn main {
+  @sources.set_log_prefix("yuru-come")
   @runtime.load_dotenv() |> ignore
   let args = @env.args()
   let mut data = "eval/comments.tsv"
@@ -83,7 +84,9 @@ async fn run(
   let mut failed = 0
   println("# yuru-come 仕分け評価")
   println("")
-  println("- 判定サーバ: \{client.base_url}（model: \{client.model}）")
+  println(
+    "- 判定サーバ: \{client.transport.base_url}（model: \{client.transport.model}）",
+  )
   println("- 評価セット: \{data}（\{rows.length()} 件）")
   println("- 文脈: \{context}")
   println("")

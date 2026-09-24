@@ -137,9 +137,7 @@ pub(open) trait Sink {
 ///|
 /// コメントの入口。`submit` にコメントを渡すとエンジンに取り込まれる。
 /// `submit` は判定を待たずにすぐ戻る。`run` は Source が尽きるまで（チャットなら接続が切れるまで）戻らない。
-pub(open) trait Source {
-  async fn run(Self, submit : async (Comment) -> Unit) -> Unit
-}
+/// yuru-kit の ChatSource を使う（lib/kit.mbt で再エクスポート）。Twitch・YouTube・標準入力の接続は yuru-kit が持つ。
 
 ///|
 pub const MOOD_SHORT_WINDOW_MS : Int64 = 30_000
