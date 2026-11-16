@@ -82,7 +82,7 @@ macOS では初回に「開発元を確認できない」と出ることがあ�
 
 ### ソースから使う
 
-[MoonBit](https://www.moonbitlang.com/download/)（moon 0.1.20260915 以降）が必要です。
+[MoonBit](https://www.moonbitlang.com/download/) が必要です。検証済みのツールチェーンは `.moon-version` に記載しています（moonc 0.10.13+cbb11c36f / moon 0.1.20260915）。CI とリリースもこのバージョンを使います。
 
 ```bash
 git clone https://github.com/hiroyannnn/yuru-come
